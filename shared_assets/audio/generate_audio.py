@@ -1,35 +1,54 @@
 
 import math
-import wave
 import struct
+import wave
 from pathlib import Path
 
-audio_dir = Path("shared_assets/audio")
-audio_dir.mkdir(parents=True, exist_ok=True)
+AUDIO_DIR = Path(__file__).resolve().parent
+SAMPLE_RATE = 44100
 
-sample_rate = 44100
-duration = 0.12
-frequency = 660
-volume = 0.18
 
-samples = int(sample_rate * duration)
+def generate_sound(filename, notes, duration=0.3, volume=0.18):
+    samples = []
+    total_samples = int(SAMPLE_RATE * duration)
 
-with wave.open(str(audio_dir / "click.wav"), "w") as audio:
-    audio.setnchannels(1)
-    audio.setsampwidth(2)
-    audio.setframerate(sample_rate)
+    for i in range(total_samples):
+        time = i / SAMPLE_RATE
 
-    for i in range(samples):
-        time = i / sample_rate
+        # Escolhe a nota conforme o momento do áudio
+        note_index = min(
+            int(time / duration * len(notes)),
+            len(notes) - 1
+        )
 
-        # Fade-out para evitar estalos
-        fade = (1 - i / samples) ** 2
+        frequency = notes[note_index]
+
+        # Volume diminui suavemente até o final
+        fade = (1 - i / total_samples) ** 2
 
         value = math.sin(2 * math.pi * frequency * time)
         value *= volume * fade
 
-        audio.writeframes(
+        samples.append(
             struct.pack("<h", int(value * 32767))
         )
 
-print("Created assets/audio/click.wav")
+    file_path = AUDIO_DIR / filename
+
+    with wave.open(str(file_path), "wb") as audio:
+        audio.setnchannels(1)
+        audio.setsampwidth(2)
+        audio.setframerate(SAMPLE_RATE)
+        audio.writeframes(b"".join(samples))
+
+    print(f"Created: {file_path.name}")
+
+
+# Clique curto
+generate_sound("click.wav", [660], duration=0.12)
+
+# Acerto: notas ascendentes
+generate_sound("correct.wav", [523, 659, 784], duration=0.45)
+
+# Erro: notas descendentes e suaves
+generate_sound("wrong.wav", [440, 392], duration=0.3)

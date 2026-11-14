@@ -38,3 +38,9 @@ class AudioManager:
 
         if not enabled:
             self.stop_audio()
+
+
+    def toggle_audio(self):
+        """Alterna entre áudio ligado e desligado."""
+        self.set_enabled(not self.enabled)
+        return self.enabled

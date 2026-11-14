@@ -4,6 +4,10 @@ import tkinter.font as tkfont
 from pathlib import Path
 from core.audio_manager import AudioManager
 
+def toggle_sound():
+    enabled = audio_manager.toggle_audio()
+    print("Sound ON" if enabled else "Sound OFF")
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 IMAGES_DIR = PROJECT_ROOT / "assets" / "images"
 FONTS_DIR = PROJECT_ROOT / "assets" / "fonts"
@@ -152,6 +156,14 @@ class HomeScreen(TitleScreen):
         MenuButton(self.canvas, x, y + gap * 2, t("ui.options"), on_options)
         MenuButton(self.canvas, x, y + gap * 3, t("ui.quit"), on_quit)
 
+        MenuButton(
+            self.canvas,
+            x,
+            y + gap * 4,
+            "Sound ON/OFF",
+            toggle_sound,
+        )
+
 
 class LanguageScreen(TitleScreen):
     """Escolha de idioma, com o mesmo visual da home."""
@@ -280,9 +292,21 @@ class DialogueScreen(tk.Frame):
                 lambda i=index: self.answer_puzzle(puzzle_id, i),
             ).pack(pady=5)
 
+    
+
     def answer_puzzle(self, puzzle_id, option_index):
-        correct, message_key = self.engine.answer_puzzle(puzzle_id, option_index)
+        correct, message_key = self.engine.answer_puzzle(
+            puzzle_id, option_index
+        )
+
+        if correct:
+            audio_manager.play_effect("correct.wav")
+        else:
+            audio_manager.play_effect("wrong.wav")
+
         self.feedback.config(text=self.t(message_key))
+
         if correct:
             self._clear_choices()
             self.next_button.pack(pady=20)
+
