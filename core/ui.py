@@ -50,20 +50,53 @@ BUTTON_BORDER = "#8BD3FF"
 BUTTON_DISABLED = "#4A5568"
 
 
+def rounded_rect(canvas, x0, y0, x1, y1, r=18, **options):
+    """Desenha um retângulo com cantos arredondados no Canvas."""
+    points = [
+        x0 + r, y0, x1 - r, y0, x1, y0, x1, y0 + r,
+        x1, y1 - r, x1, y1, x1 - r, y1, x0 + r, y1,
+        x0, y1, x0, y1 - r, x0, y0 + r, x0, y0,
+    ]
+    return canvas.create_polygon(points, smooth=True, **options)
+
+
+def fit_image(path, max_w, max_h):
+    """Abre um PNG e reduz (por fator inteiro) até caber em max_w x max_h."""
+    img = tk.PhotoImage(file=str(path))
+    factor = max(1, -(-img.width() // max_w), -(-img.height() // max_h))
+    return img.subsample(factor) if factor > 1 else img
+
+
+def draw_background(canvas, path):
+    """Desenha a imagem de fundo centralizada. Devolve a imagem: guarde a
+    referência, senão o Tkinter apaga a imagem da tela."""
+    if not path.exists():
+        return None  # sem imagem: fica só a cor de fundo
+    img = tk.PhotoImage(file=str(path))
+    # PhotoImage só reduz por fatores inteiros; o ideal é a imagem ter 900x600
+    factor = max(1, img.width() // WIDTH, img.height() // HEIGHT)
+    if factor > 1:
+        img = img.subsample(factor)
+    canvas.create_image(WIDTH // 2, HEIGHT // 2, image=img)
+    return img
+
+
 class MenuButton:
     """Botão arredondado desenhado no Canvas, com efeito de hover."""
 
-    def __init__(self, canvas, x, y, text, command, width=260, height=52, enabled=True):
+    def __init__(self, canvas, x, y, text, command, width=260, height=52,
+                 enabled=True, font_size=15):
         self.canvas = canvas
         self.command = command
         self.enabled = enabled
-        tag = f"btn_{id(self)}"
+        self.tag = tag = f"btn_{id(self)}"
 
         x0, y0 = x - width // 2, y - height // 2
         x1, y1 = x + width // 2, y + height // 2
-        self.shape = self._rounded_rect(x0, y0, x1, y1, r=18, tag=tag)
+        self.shape = rounded_rect(canvas, x0, y0, x1, y1, r=18, width=2, tags=tag)
         self.label = canvas.create_text(
-            x, y, text=text, font=("Arial", 15, "bold"), tags=tag
+            x, y, text=text, font=("Arial", font_size, "bold"), tags=tag,
+            width=width - 24, justify="center",
         )
         self._paint(BUTTON_BG)
 
@@ -71,14 +104,6 @@ class MenuButton:
             canvas.tag_bind(tag, "<Enter>", lambda e: self._hover(True))
             canvas.tag_bind(tag, "<Leave>", lambda e: self._hover(False))
             canvas.tag_bind(tag, "<Button-1>", lambda e: self.command())
-
-    def _rounded_rect(self, x0, y0, x1, y1, r, tag):
-        points = [
-            x0 + r, y0, x1 - r, y0, x1, y0, x1, y0 + r,
-            x1, y1 - r, x1, y1, x1 - r, y1, x0 + r, y1,
-            x0, y1, x0, y1 - r, x0, y0 + r, x0, y0,
-        ]
-        return self.canvas.create_polygon(points, smooth=True, width=2, tags=tag)
 
     def _paint(self, fill):
         border = BUTTON_BORDER if self.enabled else BUTTON_DISABLED
@@ -89,6 +114,10 @@ class MenuButton:
     def _hover(self, inside):
         self._paint(BUTTON_HOVER if inside else BUTTON_BG)
         self.canvas.configure(cursor="hand2" if inside else "")
+
+    def destroy(self):
+        self.canvas.delete(self.tag)
+        self.canvas.configure(cursor="")
 
 
 class TitleScreen(tk.Frame):
@@ -117,15 +146,7 @@ class TitleScreen(tk.Frame):
             self.canvas.create_text(TITLE_X, y, text=text, font=(family, size), fill=TITLE)
 
     def _draw_background(self):
-        if not BACKGROUND_IMAGE.exists():
-            return  # sem imagem: fica só a cor de fundo
-        img = tk.PhotoImage(file=str(BACKGROUND_IMAGE))
-        # PhotoImage só reduz por fatores inteiros; o ideal é a imagem ter 900x600
-        factor = max(1, img.width() // WIDTH, img.height() // HEIGHT)
-        if factor > 1:
-            img = img.subsample(factor)
-        self.background_img = img  # manter referência, senão a imagem some
-        self.canvas.create_image(WIDTH // 2, HEIGHT // 2, image=img)
+        self.background_img = draw_background(self.canvas, BACKGROUND_IMAGE)
 
 
 
@@ -156,16 +177,39 @@ class LanguageScreen(TitleScreen):
         MenuButton(self.canvas, x, y + 20 + MENU_GAP, "English", lambda: on_choose("en"))
 
 
-def _flat_button(master, text, command):
-    return tk.Button(
-        master, text=text, command=command, font=("Arial", 13),
-        bg=BUTTON_BG, fg="white", activebackground=BUTTON_HOVER,
-        activeforeground="white", relief="flat", padx=20, pady=6, cursor="hand2",
-    )
+# =====================================================================
+# CENA DE DIÁLOGO
+# =====================================================================
+
+CHARACTERS_DIR = IMAGES_DIR / "characters"
+DIALOGUE_BACKGROUND = IMAGES_DIR / "fundo-dialogo.png"
+
+# Personagens: o nome tem que ser igual ao "speaker" do story.json.
+# image: arquivo em assets/images/characters | side: lado da tela
+# color: cor da silhueta usada enquanto não houver imagem
+CHARACTERS = {
+    "Ada":   {"image": "Ada.png",   "side": "left",  "color": "#F4A261"},
+    "COSMO": {"image": "Cosmo.png", "side": "right", "color": "#8BD3FF"},
+}
+CHAR_MAX_W, CHAR_MAX_H = 360, 400  # tamanho máximo da imagem do personagem
+CHAR_LEFT_X, CHAR_RIGHT_X = 220, 680  # centro do personagem em cada lado
+CHAR_BASE_Y = 470  # altura dos "pés" (ficam escondidos atrás da caixa)
+
+DIALOGUE_BOX = (30, 420, 870, 580)  # caixa de diálogo: x0, y0, x1, y1
+BOX_FILL = "#0B1220"
+TEXT_FONT = ("Arial", 15)
+NAME_FONT = ("Arial", 14, "bold")
+FEEDBACK_COLOR = "#FFD166"
+
+TYPE_SPEED_MS = 25  # tempo entre letras (menor = mais rápido)
+SLIDE_FRAMES, SLIDE_MS = 14, 16  # animação de entrada/saída dos personagens
+SLIDE_DISTANCE = 600  # de quão longe o personagem entra
 
 
 class DialogueScreen(tk.Frame):
-    """Tela de diálogo: falas do StoryEngine, escolhas e quebra-cabeças."""
+    """Cena de diálogo: quem fala entra na tela, a fala é digitada letra por
+    letra e, quando quem fala muda, um personagem sai e o outro entra.
+    Clique, Espaço ou Enter avançam (o primeiro clique completa a fala)."""
 
     def __init__(self, master, engine, t, on_end, on_save):
         super().__init__(master, bg=BG)
@@ -174,89 +218,309 @@ class DialogueScreen(tk.Frame):
         self.on_end = on_end
         self.on_save = on_save
 
-        # Barra inferior: salvar e voltar ao menu
-        bar = tk.Frame(self, bg=BG)
-        bar.pack(side="bottom", pady=20)
-        _flat_button(bar, t("ui.save"), self.save).pack(side="left", padx=8)
-        _flat_button(bar, t("ui.menu"), on_end).pack(side="left", padx=8)
+        self._jobs = set()          # animações agendadas (canceladas ao sair)
+        self._type_job = None
+        self._on_typed = None
+        self._images = {}           # imagens dos personagens já carregadas
+        self.buttons = []           # botões de escolha/desafio na tela
+        self.current_speaker = None # personagem que está na tela agora
+        self.state = "busy"         # busy | typing | waiting | choosing | ended
+        self.full_text = ""
+        self.typed = 0
 
-        self.speaker = tk.Label(self, font=("Arial", 16, "bold"), fg=ACCENT, bg=BG)
-        self.speaker.pack(pady=(40, 10))
-        self.text = tk.Label(
-            self, font=("Arial", 15), fg="white", bg=BG,
-            wraplength=750, justify="center",
+        c = self.canvas = tk.Canvas(
+            self, width=WIDTH, height=HEIGHT, bg=BG, highlightthickness=0
         )
-        self.text.pack(pady=20)
+        c.pack(fill="both", expand=True)
+        self.background_img = draw_background(c, DIALOGUE_BACKGROUND)
 
-        self.choices_frame = tk.Frame(self, bg=BG)
-        self.choices_frame.pack(pady=10)
-        self.feedback = tk.Label(
-            self, font=("Arial", 13), fg="#FFD166", bg=BG, wraplength=750,
+        # Caixa de diálogo
+        x0, y0, x1, y1 = DIALOGUE_BOX
+        rounded_rect(c, x0, y0, x1, y1, r=20, fill=BOX_FILL,
+                     outline=ACCENT, width=2, tags="box")
+        self.text_item = c.create_text(
+            x0 + 30, y0 + 32, anchor="nw", width=x1 - x0 - 60,
+            font=TEXT_FONT, fill="white", tags="box",
         )
-        self.feedback.pack(pady=10)
-        self.next_button = _flat_button(self, t("ui.continue"), self.next_dialogue)
+        self.hint = c.create_text(
+            x1 - 24, y1 - 18, text="▼", font=("Arial", 12),
+            fill=ACCENT, state="hidden", tags="box",
+        )
+
+        # Salvar e voltar ao menu (canto superior direito)
+        MenuButton(c, 715, 32, t("ui.save"), self.save,
+                   width=110, height=36, font_size=12)
+        MenuButton(c, 835, 32, t("ui.menu"), on_end,
+                   width=110, height=36, font_size=12)
+
+        c.bind("<Button-1>", self._on_click)
+        c.bind("<space>", lambda e: self.advance())
+        c.bind("<Return>", lambda e: self.advance())
+        c.focus_set()
 
         self.next_dialogue()
 
-    def save(self):
-        self.on_save(self.engine)
-        self.feedback.config(text=self.t("ui.saved"))
+    # --- Avançar --------------------------------------------------------
+    def _on_click(self, event):
+        try:
+            tags = self.canvas.gettags("current")
+        except tk.TclError:
+            return  # a tela já foi fechada por um botão
+        if any(tag.startswith("btn_") for tag in tags):
+            return  # clique foi num botão, não avança
+        self.advance()
 
-    def _clear_choices(self):
-        for widget in self.choices_frame.winfo_children():
-            widget.destroy()
+    def advance(self):
+        if self.state == "typing":
+            self._finish_typing()
+        elif self.state == "waiting":
+            self.next_dialogue()
 
     def next_dialogue(self):
-        self._clear_choices()
-        self.feedback.config(text="")
+        self._clear_buttons()
+        self._set_feedback("")
 
         data = self.engine.next_dialogue()
 
-        # Fim do capítulo
         if data is None:
-            self.speaker.config(text="")
-            self.text.config(text=self.t("ui.chapter_end"))
-            self.next_button.config(text=self.t("ui.back_to_menu"), command=self.on_end)
-            self.next_button.pack(pady=20)
+            self._show_end()
             return
 
-        # Quebra-cabeça
         if data.get("type") == "puzzle":
-            self.show_puzzle(data["id"])
+            self._show_puzzle(data["id"])
             return
 
-        self.speaker.config(text=data["speaker"])
-        self.text.config(text=self.t(data["text_key"]))
-
+        after_typing = None
         if "choices" in data:
-            self.next_button.pack_forget()
-            for choice in data["choices"]:
-                _flat_button(
-                    self.choices_frame, self.t(choice["text_key"]),
-                    lambda choice_id=choice["id"]: self.select_choice(choice_id),
-                ).pack(pady=5)
-        else:
-            self.next_button.pack(pady=20)
+            options = [
+                (self.t(choice["text_key"]),
+                 lambda choice_id=choice["id"]: self._choose(choice_id))
+                for choice in data["choices"]
+            ]
+            after_typing = lambda: self._show_options(options)
 
-    def select_choice(self, choice_id):
+        self._present(data["speaker"], self.t(data["text_key"]), after_typing)
+
+    def _present(self, speaker, text, after_typing=None):
+        """Troca o personagem (se quem fala mudou) e depois digita a fala."""
+        self.state = "busy"
+        self.canvas.itemconfigure(self.hint, state="hidden")
+        self.canvas.itemconfigure(self.text_item, text="")
+
+        def speak():
+            self._draw_name(speaker)
+            self._type(text, after_typing)
+
+        if speaker in CHARACTERS and speaker != self.current_speaker:
+            self._swap_character(speaker, then=speak)
+        else:
+            speak()  # mesmo personagem (ou "DESAFIO"): só troca a fala
+
+    # --- Personagens ----------------------------------------------------
+    def _swap_character(self, new_speaker, then):
+        def enter():
+            self._enter_character(new_speaker, then)
+
+        if self.current_speaker:
+            self._exit_character(then=enter)
+        else:
+            enter()
+
+    def _enter_character(self, name, then):
+        side = CHARACTERS[name]["side"]
+        target_x = CHAR_LEFT_X if side == "left" else CHAR_RIGHT_X
+        direction = 1 if side == "left" else -1
+        self._draw_character(name, target_x - direction * SLIDE_DISTANCE)
+        self.current_speaker = name
+        self._slide(direction * SLIDE_DISTANCE, then)
+
+    def _exit_character(self, then):
+        side = CHARACTERS[self.current_speaker]["side"]
+        direction = -1 if side == "left" else 1
+
+        def done():
+            self.canvas.delete("char")
+            self.current_speaker = None
+            then()
+
+        self._slide(direction * SLIDE_DISTANCE, done)
+
+    def _draw_character(self, name, x):
+        c = self.canvas
+        image = self._character_image(name)
+        if image:
+            c.create_image(x, CHAR_BASE_Y, image=image, anchor="s", tags="char")
+        else:
+            # Silhueta provisória até a imagem existir
+            color = CHARACTERS[name]["color"]
+            rounded_rect(c, x - 90, CHAR_BASE_Y - 260, x + 90, CHAR_BASE_Y + 40,
+                         r=40, fill=color, outline="", tags="char")
+            c.create_oval(x - 60, CHAR_BASE_Y - 385, x + 60, CHAR_BASE_Y - 265,
+                          fill=color, outline="", tags="char")
+            c.create_text(x, CHAR_BASE_Y - 140, text=f"{name}\n(sem imagem)",
+                          font=("Arial", 12, "bold"), fill=BG,
+                          justify="center", tags="char")
+        c.tag_lower("char", "box")  # personagem fica atrás da caixa de diálogo
+
+    def _character_image(self, name):
+        if name not in self._images:
+            path = CHARACTERS_DIR / CHARACTERS[name]["image"]
+            self._images[name] = (
+                fit_image(path, CHAR_MAX_W, CHAR_MAX_H) if path.exists() else None
+            )
+        return self._images[name]
+
+    def _slide(self, distance, then):
+        """Move os itens "char" com desaceleração no final."""
+        positions = [
+            distance * (1 - (1 - i / SLIDE_FRAMES) ** 3)
+            for i in range(SLIDE_FRAMES + 1)
+        ]
+        steps = [b - a for a, b in zip(positions, positions[1:])]
+
+        def step(i=0):
+            if i == len(steps):
+                then()
+                return
+            self.canvas.move("char", steps[i], 0)
+            self._later(SLIDE_MS, lambda: step(i + 1))
+
+        step()
+
+    # --- Caixa de diálogo -----------------------------------------------
+    def _draw_name(self, name):
+        c = self.canvas
+        c.delete("name")
+        if not name:
+            return
+        side = CHARACTERS.get(name, {}).get("side")
+        if side is None and self.current_speaker:
+            side = CHARACTERS[self.current_speaker]["side"]
+        x0, y0, x1, _ = DIALOGUE_BOX
+        w = tkfont.Font(font=NAME_FONT).measure(name) + 40
+        nx0 = x0 + 25 if side != "right" else x1 - 25 - w
+        rounded_rect(c, nx0, y0 - 17, nx0 + w, y0 + 17, r=14,
+                     fill=ACCENT, outline="", tags="name")
+        c.create_text(nx0 + w / 2, y0, text=name, font=NAME_FONT,
+                      fill=BG, tags="name")
+
+    def _type(self, text, after_typing):
+        self.full_text = text
+        self.typed = 0
+        self._on_typed = after_typing
+        self.state = "typing"
+        self._type_step()
+
+    def _type_step(self):
+        self.typed += 1
+        self.canvas.itemconfigure(self.text_item, text=self.full_text[:self.typed])
+        if self.typed >= len(self.full_text):
+            self._typing_done()
+        else:
+            self._type_job = self._later(TYPE_SPEED_MS, self._type_step)
+
+    def _finish_typing(self):
+        if self._type_job:
+            self.after_cancel(self._type_job)
+            self._jobs.discard(self._type_job)
+        self.canvas.itemconfigure(self.text_item, text=self.full_text)
+        self._typing_done()
+
+    def _typing_done(self):
+        self._type_job = None
+        callback, self._on_typed = self._on_typed, None
+        if callback:
+            self.state = "choosing"
+            callback()
+        else:
+            self.state = "waiting"
+            self.canvas.itemconfigure(self.hint, state="normal")
+
+    def _set_feedback(self, text):
+        """Mensagem em destaque logo acima da caixa (acerto/erro, jogo salvo)."""
+        c = self.canvas
+        c.delete("feedback")
+        if not text:
+            return
+        label = c.create_text(
+            WIDTH // 2, 378, text=text, width=760, justify="center",
+            font=("Arial", 13, "bold"), fill=FEEDBACK_COLOR, tags="feedback",
+        )
+        bx0, by0, bx1, by1 = c.bbox(label)
+        bubble = rounded_rect(c, bx0 - 16, by0 - 8, bx1 + 16, by1 + 8, r=14,
+                              fill=BOX_FILL, outline=FEEDBACK_COLOR, width=1,
+                              tags="feedback")
+        c.tag_lower(bubble, label)
+
+    # --- Escolhas e desafios --------------------------------------------
+    def _show_options(self, options):
+        """options: lista de (texto, função). Botões empilhados acima da caixa."""
+        self._clear_buttons()
+        gap, bottom_y = 62, 320
+        first_y = bottom_y - gap * (len(options) - 1)
+        for i, (text, command) in enumerate(options):
+            self.buttons.append(MenuButton(
+                self.canvas, WIDTH // 2, first_y + gap * i, text, command,
+                width=560, height=50, font_size=13,
+            ))
+
+    def _clear_buttons(self):
+        for button in self.buttons:
+            button.destroy()
+        self.buttons = []
+
+    def _choose(self, choice_id):
         self.engine.make_choice(choice_id)
         self.next_dialogue()
 
-    def show_puzzle(self, puzzle_id):
+    def _show_puzzle(self, puzzle_id):
         puzzle = self.engine.get_puzzle(puzzle_id)
-        self.speaker.config(text=self.t("ui.challenge"))
-        self.text.config(text=self.t(puzzle["question_key"]))
-        self.next_button.pack_forget()
+        options = [
+            (self.t(option["text_key"]),
+             lambda i=i: self._answer(puzzle_id, i))
+            for i, option in enumerate(puzzle["options"])
+        ]
+        self._present(self.t("ui.challenge"), self.t(puzzle["question_key"]),
+                      lambda: self._show_options(options))
 
-        for index, option in enumerate(puzzle["options"]):
-            _flat_button(
-                self.choices_frame, self.t(option["text_key"]),
-                lambda i=index: self.answer_puzzle(puzzle_id, i),
-            ).pack(pady=5)
-
-    def answer_puzzle(self, puzzle_id, option_index):
+    def _answer(self, puzzle_id, option_index):
         correct, message_key = self.engine.answer_puzzle(puzzle_id, option_index)
-        self.feedback.config(text=self.t(message_key))
+        self._set_feedback(self.t(message_key))
         if correct:
-            self._clear_choices()
-            self.next_button.pack(pady=20)
+            self._clear_buttons()
+            self.state = "waiting"
+            self.canvas.itemconfigure(self.hint, state="normal")
+
+    # --- Fim do capítulo e salvar ---------------------------------------
+    def _show_end(self):
+        self.state = "ended"
+
+        def show():
+            self._draw_name("")
+            self.canvas.itemconfigure(self.text_item, text=self.t("ui.chapter_end"))
+            self._show_options([(self.t("ui.back_to_menu"), self.on_end)])
+
+        if self.current_speaker:
+            self._exit_character(then=show)
+        else:
+            show()
+
+    def save(self):
+        self.on_save(self.engine)
+        self._set_feedback(self.t("ui.saved"))
+
+    # --- Agendamento das animações --------------------------------------
+    def _later(self, ms, callback):
+        def run():
+            self._jobs.discard(job)
+            callback()
+
+        job = self.after(ms, run)
+        self._jobs.add(job)
+        return job
+
+    def destroy(self):
+        for job in self._jobs:
+            self.after_cancel(job)
+        self._jobs.clear()
+        super().destroy()
