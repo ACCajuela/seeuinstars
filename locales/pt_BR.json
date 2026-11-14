@@ -14,7 +14,10 @@
     "menu": "Menu principal",
     "back_to_menu": "Voltar ao menu",
     "sound_on": "Som: Ligado",
-    "sound_off": "Som: Desligado"
+    "sound_off": "Som: Desligado",
+    "audio": "Áudio",
+    "language": "Idioma",
+    "back": "Voltar"
   },
   "chapter_01": {
     "title": "Capítulo 1",

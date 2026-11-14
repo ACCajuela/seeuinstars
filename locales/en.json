@@ -14,7 +14,10 @@
     "menu": "Main Menu",
     "back_to_menu": "Back to Menu",
     "sound_on": "Sound: ON",
-    "sound_off": "Sound: OFF"
+    "sound_off": "Sound: OFF",
+    "audio": "Audio",
+    "language": "Language",
+    "back": "Back"
   },
   "chapter_01": {
     "title": "Chapter 1",
