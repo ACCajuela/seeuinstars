@@ -3,30 +3,43 @@ import math
 import time
 import tkinter as tk
 
+from core.ui import (
+    ACCENT, BACKGROUND_IMAGE, BG, BUTTON_BG, CHARACTERS, CHARACTERS_DIR,
+    FEEDBACK_COLOR, MINIGAME_MUTED as MUTED, MINIGAME_PANEL,
+    MINIGAME_SUCCESS as SUCCESS, TITLE as TEXT,
+    CanvasLabel, CanvasSlider, CosmoHint, MenuButton,
+    IMAGES_DIR, draw_minigame_heading, draw_minigame_panel, fit_content,
+    fit_image,
+)
 from puzzles.mars_gravity import MarsGravityPuzzle
 
 
 # ============================================================
 # ASTRA — Chapter 2: Mars Gravity
-# Temporary interface — visual assets for Bri.
+# Visual com a identidade do jogo (cores, botões e painel de core/ui.py).
 # ============================================================
 
 WIDTH = 900
 HEIGHT = 600
 SCENE_WIDTH = 680
 
-BG = "#1B1720"
-PANEL = "#30232B"
-TEXT = "#FFF4EA"
-MUTED = "#D2B6A8"
-ACCENT = "#FFB16B"
-SUCCESS = "#91E4AE"
+# Cenário: a mesma paisagem de Marte da home
+MARS_BACKGROUND = BACKGROUND_IMAGE
+SKY = "#3A1F1A"                   # cor de fundo se a imagem não existir
 
 GROUND = "#9C4E37"
 GROUND_DARK = "#68372F"
-TRAJECTORY = "#FFE0A0"
+GROUND_EDGE = "#C46A47"
+TRAJECTORY = FEEDBACK_COLOR
 SUIT = "#EAF2FA"
-ROVER_COLOR = "#7DE0AC"
+ROVER_COLOR = ACCENT
+
+ADA_MAX_W, ADA_MAX_H = 48, 60     # tamanho da Ada no minigame
+
+# Imagem do rover (PNG com fundo transparente). Sem o arquivo, o rover
+# é desenhado. ROVER_SCALE: largura do rover em relação à plataforma de pouso.
+ROVER_IMAGE = IMAGES_DIR / "hover.png"
+ROVER_SCALE = 2.2
 
 
 class MarsGravityUI(tk.Frame):
@@ -34,7 +47,7 @@ class MarsGravityUI(tk.Frame):
     FRAME_MS = 30
 
     def __init__(self, master, on_complete=None, on_back=None):
-        super().__init__(master, bg=BG)
+        super().__init__(master, bg=SKY)
 
         self.puzzle = MarsGravityPuzzle()
 
@@ -45,7 +58,7 @@ class MarsGravityUI(tk.Frame):
         self.after_id = None
         self.completed_notified = False
 
-        self.ground_y = 470
+        self.ground_y = 430
         self.origin_x = 65
         self.pixels_per_meter = 13
 
@@ -82,170 +95,113 @@ class MarsGravityUI(tk.Frame):
 
         self.canvas = tk.Canvas(
             self,
-            width=SCENE_WIDTH,
+            width=WIDTH,
             height=HEIGHT,
-            bg=BG,
+            bg=SKY,
             highlightthickness=0
         )
 
-        self.canvas.pack(
-            side="left",
-            fill="both",
-            expand=True
+        self.canvas.pack(fill="both", expand=True)
+        c = self.canvas
+
+        # Imagem da Ada (se existir); senão, o desenho simples é usado
+        ada_path = CHARACTERS_DIR / CHARACTERS["Ada"]["image"]
+        self.ada_img = (
+            fit_image(ada_path, ADA_MAX_W, ADA_MAX_H)
+            if ada_path.exists() else None
         )
 
-        self.panel = tk.Frame(
-            self,
-            bg=PANEL,
-            width=WIDTH - SCENE_WIDTH
+        # Imagem do rover (se existir)
+        self.rover_img = None
+        if ROVER_IMAGE.exists():
+            target_w = (
+                self.puzzle.ROVER_WIDTH * self.pixels_per_meter * ROVER_SCALE
+            )
+            self.rover_img, self.rover_box = fit_content(ROVER_IMAGE, target_w)
+
+        # Cenário fixo (desenhado uma vez só)
+        self.draw_sky()
+        self.draw_ground()
+        draw_minigame_heading(
+            c,
+            "CHAPTER 2 — ARRIVAL ON MARS",
+            "Land on the moving rover."
         )
 
-        self.panel.pack(side="right", fill="y")
-        self.panel.pack_propagate(False)
+        # Painel lateral
+        draw_minigame_panel(c, "MARS\nGRAVITY")
+        x0, y0, x1, y1 = MINIGAME_PANEL
+        cx = (x0 + x1) / 2
+        slider_x, slider_len = x0 + 22, (x1 - x0) - 44
 
-        tk.Label(
-            self.panel,
-            text="MARS\nGRAVITY",
-            font=("Arial", 18, "bold"),
-            fg=TEXT,
-            bg=PANEL,
-            justify="center"
-        ).pack(pady=(25, 15))
-
-        tk.Label(
-            self.panel,
-            text="Impulse velocity",
-            font=("Arial", 10),
-            fg=MUTED,
-            bg=PANEL
-        ).pack()
-
-        self.velocity_label = tk.Label(
-            self.panel,
-            font=("Arial", 14, "bold"),
-            fg=ACCENT,
-            bg=PANEL
-        )
-        self.velocity_label.pack(pady=5)
-
-        self.velocity_slider = tk.Scale(
-            self.panel,
-            from_=0,
-            to=30,
-            resolution=0.1,
-            orient="horizontal",
+        c.create_text(cx, 128, text="Impulse velocity",
+                      font=("Arial", 11), fill=MUTED)
+        self.velocity_label = CanvasLabel(c, c.create_text(
+            cx, 155, font=("Arial", 18, "bold"), fill=ACCENT
+        ))
+        self.velocity_slider = CanvasSlider(
+            c, slider_x, 188, slider_len,
+            from_=0, to=30, resolution=0.1,
             variable=self.velocity_var,
-            command=lambda _: self.update_controls(),
-            bg=PANEL,
-            fg=TEXT,
-            troughcolor=GROUND_DARK,
-            highlightthickness=0,
-            showvalue=False,
-            length=175
+            command=lambda _: self.update_controls()
         )
-        self.velocity_slider.pack(pady=5)
 
-        tk.Label(
-            self.panel,
-            text="Launch angle",
-            font=("Arial", 10),
-            fg=MUTED,
-            bg=PANEL
-        ).pack(pady=(12, 0))
-
-        self.angle_label = tk.Label(
-            self.panel,
-            font=("Arial", 14, "bold"),
-            fg=ACCENT,
-            bg=PANEL
-        )
-        self.angle_label.pack(pady=5)
-
-        self.angle_slider = tk.Scale(
-            self.panel,
-            from_=0,
-            to=90,
-            resolution=1,
-            orient="horizontal",
+        c.create_text(cx, 222, text="Launch angle",
+                      font=("Arial", 11), fill=MUTED)
+        self.angle_label = CanvasLabel(c, c.create_text(
+            cx, 249, font=("Arial", 18, "bold"), fill=ACCENT
+        ))
+        self.angle_slider = CanvasSlider(
+            c, slider_x, 282, slider_len,
+            from_=0, to=90, resolution=1,
             variable=self.angle_var,
-            command=lambda _: self.update_controls(),
-            bg=PANEL,
-            fg=TEXT,
-            troughcolor=GROUND_DARK,
-            highlightthickness=0,
-            showvalue=False,
-            length=175
-        )
-        self.angle_slider.pack(pady=5)
-
-        self.launch_button = tk.Button(
-            self.panel,
-            text="JUMP",
-            font=("Arial", 11, "bold"),
-            bg="#B85B3B",
-            fg=TEXT,
-            relief="flat",
-            command=self.start_jump
-        )
-        self.launch_button.pack(
-            fill="x",
-            padx=20,
-            pady=(18, 5),
-            ipady=7
+            command=lambda _: self.update_controls()
         )
 
-        tk.Button(
-            self.panel,
-            text="RESET",
-            font=("Arial", 10, "bold"),
-            bg="#62453E",
-            fg=TEXT,
-            relief="flat",
-            command=self.reset_simulation
-        ).pack(
-            fill="x",
-            padx=20,
-            pady=5,
-            ipady=6
+        self.launch_button = MenuButton(
+            c, cx, 330, "JUMP", self.start_jump,
+            width=160, height=42, font_size=13, primary=True
+        )
+
+        MenuButton(
+            c, cx, 377, "RESET", self.reset_simulation,
+            width=160, height=38, font_size=12
         )
 
         if self.on_back is not None:
-            tk.Button(
-                self.panel,
-                text="BACK",
-                font=("Arial", 10),
-                bg=PANEL,
-                fg=MUTED,
-                relief="flat",
-                command=self.go_back
-            ).pack(pady=5)
+            MenuButton(
+                c, cx, 421, "BACK", self.go_back,
+                width=160, height=38, font_size=12
+            )
 
-        tk.Label(
-            self.panel,
-            textvariable=self.info_var,
-            font=("Arial", 9),
-            fg=MUTED,
-            bg=PANEL,
-            justify="left",
-            wraplength=190
-        ).pack(
-            padx=15,
-            pady=(15, 5),
-            anchor="w"
+        c.create_line(x0 + 20, 450, x1 - 20, 450, fill="#24324F", width=2)
+
+        info_item = c.create_text(
+            x0 + 20, 460, anchor="nw", width=(x1 - x0) - 36,
+            font=("Arial", 9), fill=MUTED
+        )
+        self.info_var.trace_add(
+            "write",
+            lambda *_: c.itemconfigure(info_item, text=self.info_var.get())
         )
 
-        tk.Label(
-            self.panel,
-            textvariable=self.status_var,
-            font=("Arial", 10, "bold"),
-            fg=ACCENT,
-            bg=PANEL,
-            justify="center",
-            wraplength=190
-        ).pack(
-            padx=12,
-            pady=8
-        )
+        # COSMO comenta o salto no balão
+        self.hint = CosmoHint(c, right=SCENE_WIDTH - 20)
+        self.status_var.trace_add("write", lambda *_: self.show_status())
+        self.show_status()
+
+    def show_status(self):
+        """Mostra a mensagem no balão do COSMO, colorida pelo resultado."""
+        status = self.puzzle.get_state()["status"]
+
+        if status == "success":
+            color = SUCCESS
+        elif status in ("too_short", "too_far", "timeout"):
+            color = FEEDBACK_COLOR
+        else:
+            color = TEXT
+
+        self.hint.set(self.status_var.get(), color)
 
     # --------------------------------------------------------
     # Controls
@@ -404,49 +360,39 @@ class MarsGravityUI(tk.Frame):
         )
 
     def draw_scene(self):
-        self.canvas.delete("all")
 
-        self.draw_sky()
-        self.draw_ground()
+        # Apaga só o que se move; cenário e painel ficam.
+        self.canvas.delete("dyn")
+
         self.draw_rover()
         self.draw_trajectory()
         self.draw_astronaut()
 
-        self.canvas.create_text(
-            25, 25,
-            text="CHAPTER 2 — ARRIVAL ON MARS",
-            fill=TEXT,
-            font=("Arial", 15, "bold"),
-            anchor="nw"
-        )
-
-        self.canvas.create_text(
-            25, 55,
-            text="Land on the moving rover.",
-            fill=MUTED,
-            font=("Arial", 10),
-            anchor="nw"
-        )
+        self.hint.raise_()
 
     def draw_sky(self):
+
+        if MARS_BACKGROUND.exists():
+            img = tk.PhotoImage(file=str(MARS_BACKGROUND))
+            factor = max(1, img.width() // WIDTH, img.height() // HEIGHT)
+            if factor > 1:
+                img = img.subsample(factor)
+            self.sky_img = img  # manter referência, senão a imagem some
+            self.canvas.create_image(0, 0, image=img, anchor="nw")
+            return
+
+        # Sem imagem: céu simples com sol
         self.canvas.create_oval(
             490, 90, 580, 180,
             fill="#E4A17A",
             outline=""
         )
 
-        for i in range(35):
-            x = (i * 89 + 41) % SCENE_WIDTH
-            y = (i * 53 + 19) % 350
-
-            self.canvas.create_oval(
-                x, y, x + 2, y + 2,
-                fill="#D8A894",
-                outline=""
-            )
-
     def draw_ground(self):
-        self.canvas.create_rectangle(
+
+        c = self.canvas
+
+        c.create_rectangle(
             0,
             self.ground_y,
             SCENE_WIDTH,
@@ -455,10 +401,13 @@ class MarsGravityUI(tk.Frame):
             outline=""
         )
 
+        c.create_line(0, self.ground_y, SCENE_WIDTH, self.ground_y,
+                      fill=GROUND_EDGE, width=3)
+
         for i in range(12):
             x = i * 65
 
-            self.canvas.create_oval(
+            c.create_oval(
                 x,
                 self.ground_y + 20 + (i % 3) * 17,
                 x + 30,
@@ -468,6 +417,8 @@ class MarsGravityUI(tk.Frame):
             )
 
     def draw_rover(self):
+
+        c = self.canvas
         state = self.puzzle.get_state()
 
         x, y = self.world_to_screen(
@@ -481,51 +432,70 @@ class MarsGravityUI(tk.Frame):
             / 2
         )
 
-        # Placeholder rover body
-        self.canvas.create_rectangle(
-            x - half_width,
-            y - 20,
-            x + half_width,
-            y - 8,
-            fill=ROVER_COLOR,
-            outline=""
-        )
-
-        self.canvas.create_rectangle(
-            x - 12,
-            y - 29,
-            x + 12,
-            y - 20,
-            fill="#B5F0CE",
-            outline=""
-        )
-
-        for wheel_x in (x - 15, x + 15):
-            self.canvas.create_oval(
-                wheel_x - 6,
-                y - 10,
-                wheel_x + 6,
-                y + 2,
-                fill="#343D47",
-                outline=ROVER_COLOR,
-                width=2
-            )
-
         direction = (
             "→"
             if state["rover_direction"] > 0
             else "←"
         )
 
-        self.canvas.create_text(
-            x,
-            y - 45,
+        if self.rover_img is not None:
+            # Desenho do rover centralizado e com as rodas no chão
+            x0, y0, x1, y1 = self.rover_box
+            w = (x1 - x0) / 2
+            c.create_oval(  # sombra no chão
+                x - w, y - 6, x + w, y + 8,
+                fill="#3A1A12", outline="", tags="dyn"
+            )
+            c.create_image(
+                x - (x0 + x1) / 2, y - y1,
+                image=self.rover_img, anchor="nw", tags="dyn"
+            )
+            # Área de pouso marcada no chão
+            c.create_line(
+                x - half_width, y + 3, x + half_width, y + 3,
+                fill=ROVER_COLOR, width=3, tags="dyn"
+            )
+            c.create_text(
+                x, y - (y1 - y0) - 12,
+                text=f"ROVER {direction}",
+                fill=TEXT,
+                font=("Arial", 10, "bold"),
+                tags="dyn"
+            )
+            return
+
+        # Sem imagem: plataforma de pouso desenhada
+        c.create_rectangle(
+            x - half_width, y - 20, x + half_width, y - 8,
+            fill=BUTTON_BG, outline=ROVER_COLOR, width=2, tags="dyn"
+        )
+
+        # Cabine com antena
+        c.create_rectangle(
+            x - 12, y - 30, x + 12, y - 20,
+            fill=ROVER_COLOR, outline="", tags="dyn"
+        )
+        c.create_line(x + 8, y - 30, x + 8, y - 40,
+                      fill=ROVER_COLOR, width=2, tags="dyn")
+        c.create_oval(x + 5, y - 44, x + 11, y - 38,
+                      fill=FEEDBACK_COLOR, outline="", tags="dyn")
+
+        for wheel_x in (x - half_width + 8, x, x + half_width - 8):
+            c.create_oval(
+                wheel_x - 6, y - 10, wheel_x + 6, y + 2,
+                fill="#1A2236", outline=ROVER_COLOR, width=2, tags="dyn"
+            )
+
+        c.create_text(
+            x, y - 56,
             text=f"ROVER {direction}",
-            fill=ROVER_COLOR,
-            font=("Arial", 10, "bold")
+            fill=TEXT,
+            font=("Arial", 10, "bold"),
+            tags="dyn"
         )
 
     def draw_trajectory(self):
+
         if len(self.trajectory) < 2:
             return
 
@@ -538,10 +508,13 @@ class MarsGravityUI(tk.Frame):
         self.canvas.create_line(
             *points,
             fill=TRAJECTORY,
-            width=2
+            width=2,
+            dash=(6, 4),
+            tags="dyn"
         )
 
     def draw_astronaut(self):
+
         state = self.puzzle.get_state()
 
         x, y = self.world_to_screen(
@@ -549,38 +522,20 @@ class MarsGravityUI(tk.Frame):
             state["y"]
         )
 
-        # Temporary Ada placeholder
+        if self.ada_img is not None:
+            self.canvas.create_image(
+                x, y + 4, image=self.ada_img, anchor="s", tags="dyn"
+            )
+            return
+
+        # Sem imagem: astronauta simples
         self.canvas.create_oval(
-            x - 7,
-            y - 22,
-            x + 7,
-            y - 8,
-            fill=SUIT,
-            outline=ACCENT,
-            width=2
+            x - 7, y - 22, x + 7, y - 8,
+            fill=SUIT, outline=ACCENT, width=2, tags="dyn"
         )
-
         self.canvas.create_rectangle(
-            x - 8,
-            y - 8,
-            x + 8,
-            y + 6,
-            fill=SUIT,
-            outline=ACCENT
-        )
-
-        self.canvas.create_line(
-            x - 4, y + 6,
-            x - 6, y + 12,
-            fill=SUIT,
-            width=3
-        )
-
-        self.canvas.create_line(
-            x + 4, y + 6,
-            x + 6, y + 12,
-            fill=SUIT,
-            width=3
+            x - 8, y - 8, x + 8, y + 6,
+            fill=SUIT, outline=ACCENT, tags="dyn"
         )
 
     # --------------------------------------------------------

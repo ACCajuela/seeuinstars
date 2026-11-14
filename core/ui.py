@@ -112,6 +112,35 @@ def fit_image(path, max_w, max_h):
     return img.subsample(factor) if factor > 1 else img
 
 
+def fit_content(path, target_w):
+    """Abre um PNG com fundo transparente, acha onde está o desenho (ignora
+    as sobras transparentes em volta) e reduz a imagem para o desenho ficar
+    com ~target_w pixels de largura.
+
+    Devolve (imagem, (x0, y0, x1, y1)): a caixa do desenho dentro da imagem
+    já reduzida, para posicionar o desenho com precisão."""
+    img = tk.PhotoImage(file=str(path))
+    step = 16  # verifica 1 a cada 16 pixels (rápido e preciso o bastante)
+
+    xs, ys = [], []
+    for y in range(0, img.height(), step):
+        for x in range(0, img.width(), step):
+            if not img.transparency_get(x, y):
+                xs.append(x)
+                ys.append(y)
+
+    if not xs:  # imagem sem nada visível: usa a imagem inteira
+        xs, ys = [0, img.width() - step], [0, img.height() - step]
+
+    box = (min(xs), min(ys), max(xs) + step, max(ys) + step)
+    factor = max(1, round((box[2] - box[0]) / target_w))
+
+    if factor > 1:
+        img = img.subsample(factor)
+
+    return img, tuple(v / factor for v in box)
+
+
 def draw_background(canvas, path):
     if not path.exists():
         return None
@@ -151,12 +180,19 @@ class MenuButton:
         width=260,
         height=52,
         enabled=True,
-        font_size=15
+        font_size=15,
+        primary=False
     ):
         self.canvas = canvas
         self.command = command
         self.enabled = enabled
         self.tag = f"btn_{id(self)}"
+
+        # primary=True: botão de destaque (ação principal do minigame)
+        if primary:
+            self.fill, self.hover_fill, self.text_color = ACCENT, "#B5E4FF", BG
+        else:
+            self.fill, self.hover_fill, self.text_color = BUTTON_BG, BUTTON_HOVER, TITLE
 
         x0 = x - width // 2
         y0 = y - height // 2
@@ -181,26 +217,25 @@ class MenuButton:
             justify="center"
         )
 
-        self._paint(BUTTON_BG)
+        self._paint(self.fill)
 
-        if enabled:
-            canvas.tag_bind(
-                self.tag,
-                "<Enter>",
-                lambda e: self._hover(True)
-            )
+        canvas.tag_bind(
+            self.tag,
+            "<Enter>",
+            lambda e: self._hover(True)
+        )
 
-            canvas.tag_bind(
-                self.tag,
-                "<Leave>",
-                lambda e: self._hover(False)
-            )
+        canvas.tag_bind(
+            self.tag,
+            "<Leave>",
+            lambda e: self._hover(False)
+        )
 
-            canvas.tag_bind(
-                self.tag,
-                "<Button-1>",
-                lambda e: self._click()
-            )
+        canvas.tag_bind(
+            self.tag,
+            "<Button-1>",
+            lambda e: self._click()
+        )
 
     def _paint(self, fill):
         border = (
@@ -209,7 +244,10 @@ class MenuButton:
             else BUTTON_DISABLED
         )
 
-        color = TITLE if self.enabled else BUTTON_DISABLED
+        color = self.text_color if self.enabled else BUTTON_DISABLED
+
+        if not self.enabled:
+            fill = BUTTON_BG
 
         self.canvas.itemconfigure(
             self.shape,
@@ -223,8 +261,11 @@ class MenuButton:
         )
 
     def _hover(self, inside):
+        if not self.enabled:
+            return
+
         self._paint(
-            BUTTON_HOVER if inside else BUTTON_BG
+            self.hover_fill if inside else self.fill
         )
 
         self.canvas.configure(
@@ -238,9 +279,113 @@ class MenuButton:
         audio_manager.play_effect("click.wav")
         self.command()
 
+    def config(self, state=None, text=None):
+        """Mesmo jeito de usar de um tk.Button:
+        botao.config(state="disabled") / botao.config(text="...")."""
+        if text is not None:
+            self.canvas.itemconfigure(self.label, text=text)
+
+        if state is not None:
+            self.enabled = state != "disabled"
+            self._paint(self.fill)
+
+            if not self.enabled:
+                self.canvas.configure(cursor="")
+
     def destroy(self):
         self.canvas.delete(self.tag)
         self.canvas.configure(cursor="")
+
+
+class CanvasSlider:
+    """Barra deslizante no estilo do jogo, desenhada no Canvas.
+    Funciona como um tk.Scale: aceita variable, command e config(state=...)."""
+
+    def __init__(
+        self,
+        canvas,
+        x,
+        y,
+        length,
+        from_,
+        to,
+        resolution=1,
+        variable=None,
+        command=None
+    ):
+        self.canvas = canvas
+        self.x0, self.x1, self.y = x, x + length, y
+        self.from_, self.to = from_, to
+        self.resolution = resolution
+        self.variable = variable or tk.DoubleVar(value=from_)
+        self.command = command
+        self.enabled = True
+        self.tag = f"slider_{id(self)}"
+
+        # trilho, parte preenchida e botão redondo
+        self.track = rounded_rect(
+            canvas, self.x0, y - 4, self.x1, y + 4, r=4,
+            fill="#24324F", outline="", tags=self.tag
+        )
+        self.fill_bar = rounded_rect(
+            canvas, self.x0, y - 4, self.x0 + 8, y + 4, r=4,
+            fill=ACCENT, outline="", tags=self.tag
+        )
+        self.knob = canvas.create_oval(
+            0, 0, 0, 0, fill=TITLE, outline=ACCENT, width=3, tags=self.tag
+        )
+
+        canvas.tag_bind(self.tag, "<Button-1>", self._drag)
+        canvas.tag_bind(self.tag, "<B1-Motion>", self._drag)
+        canvas.tag_bind(self.tag, "<Enter>", lambda e: self._cursor(True))
+        canvas.tag_bind(self.tag, "<Leave>", lambda e: self._cursor(False))
+
+        self._draw()
+
+    def _cursor(self, inside):
+        self.canvas.configure(cursor="hand2" if inside and self.enabled else "")
+
+    def _drag(self, event):
+        if not self.enabled:
+            return
+
+        ratio = (event.x - self.x0) / (self.x1 - self.x0)
+        ratio = min(1, max(0, ratio))
+        value = self.from_ + ratio * (self.to - self.from_)
+        value = round(value / self.resolution) * self.resolution
+
+        self.variable.set(value)
+        self._draw()
+
+        if self.command is not None:
+            self.command(value)
+
+    def _draw(self):
+        ratio = (self.variable.get() - self.from_) / (self.to - self.from_)
+        kx = self.x0 + min(1, max(0, ratio)) * (self.x1 - self.x0)
+        y, r = self.y, 10
+        color = ACCENT if self.enabled else BUTTON_DISABLED
+
+        self.canvas.coords(self.knob, kx - r, y - r, kx + r, y + r)
+        self.canvas.itemconfigure(self.knob, outline=color)
+        self.canvas.delete(self.fill_bar)
+        self.fill_bar = rounded_rect(
+            self.canvas, self.x0, y - 4, max(kx, self.x0 + 8), y + 4, r=4,
+            fill=color, outline="", tags=self.tag
+        )
+        self.canvas.tag_raise(self.knob)
+
+    def get(self):
+        return self.variable.get()
+
+    def set(self, value):
+        self.variable.set(value)
+        self._draw()
+
+    def config(self, state=None):
+        if state is not None:
+            self.enabled = state != "disabled"
+            self._draw()
 
 
 # ============================================================
@@ -1244,3 +1389,83 @@ class AudioSettingsScreen(tk.Frame):
 
         if hasattr(self, "effects_text"):
             self.update_labels()
+
+
+# ============================================================
+# MINIGAMES — peças visuais compartilhadas
+# ============================================================
+# Usadas em puzzles/*_ui.py para os minigames terem a mesma cara
+# do resto do jogo (painel, títulos, COSMO dando dicas).
+
+MINIGAME_PANEL = (690, 15, 885, 585)   # painel lateral: x0, y0, x1, y1
+MINIGAME_SUCCESS = "#8CE7B0"           # cor de mensagem de acerto
+MINIGAME_MUTED = "#A9BDD4"             # textos secundários
+
+
+class CanvasLabel:
+    """Texto do Canvas que aceita .config(text=..., fg=...) como um tk.Label."""
+
+    def __init__(self, canvas, item):
+        self.canvas = canvas
+        self.item = item
+
+    def config(self, text=None, fg=None):
+        if text is not None:
+            self.canvas.itemconfigure(self.item, text=text)
+        if fg is not None:
+            self.canvas.itemconfigure(self.item, fill=fg)
+
+
+def draw_minigame_panel(canvas, title):
+    """Painel lateral com o mesmo estilo da caixa de diálogo + título."""
+    x0, y0, x1, y1 = MINIGAME_PANEL
+    rounded_rect(canvas, x0, y0, x1, y1, r=20, fill=BOX_FILL,
+                 outline=ACCENT, width=2)
+    canvas.create_text(
+        (x0 + x1) / 2, y0 + 55, text=title, justify="center",
+        font=(font_or_fallback(TITLE_FONT), 20), fill=TITLE,
+    )
+
+
+def draw_minigame_heading(canvas, title, subtitle):
+    """Título do capítulo no canto superior esquerdo, na fonte do jogo."""
+    family = font_or_fallback(TITLE_FONT)
+    canvas.create_text(27, 27, text=title, anchor="nw",
+                       font=(family, 18), fill="#000000")
+    canvas.create_text(25, 25, text=title, anchor="nw",
+                       font=(family, 18), fill=TITLE)
+    canvas.create_text(25, 58, text=subtitle, anchor="nw",
+                       font=("Arial", 11), fill=MINIGAME_MUTED)
+
+
+class CosmoHint:
+    """COSMO no canto inferior esquerdo com um balão de fala (dicas e
+    resultados do minigame), no mesmo estilo da cena de diálogo."""
+
+    def __init__(self, canvas, right=660):
+        self.canvas = canvas
+        x0, y0, x1, y1 = 135, 500, right, 585
+
+        path = CHARACTERS_DIR / CHARACTERS["COSMO"]["image"]
+        self.image = fit_image(path, 150, 150) if path.exists() else None
+        if self.image:
+            canvas.create_image(70, 598, image=self.image, anchor="s",
+                                tags="hint")
+
+        rounded_rect(canvas, x0, y0, x1, y1, r=18, fill=BOX_FILL,
+                     outline=ACCENT, width=2, tags="hint")
+        name_w = tkfont.Font(font=NAME_FONT).measure("COSMO") + 32
+        rounded_rect(canvas, x0 + 20, y0 - 14, x0 + 20 + name_w, y0 + 14,
+                     r=12, fill=ACCENT, outline="", tags="hint")
+        canvas.create_text(x0 + 20 + name_w / 2, y0, text="COSMO",
+                           font=NAME_FONT, fill=BG, tags="hint")
+        self.text = canvas.create_text(
+            x0 + 22, (y0 + y1) / 2 + 4, anchor="w", width=x1 - x0 - 40,
+            font=("Arial", 12, "bold"), fill=TITLE, tags="hint",
+        )
+
+    def set(self, text, color=TITLE):
+        self.canvas.itemconfigure(self.text, text=text, fill=color)
+
+    def raise_(self):
+        self.canvas.tag_raise("hint")

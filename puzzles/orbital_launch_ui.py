@@ -2,34 +2,43 @@
 import math
 import tkinter as tk
 
+from core.ui import (
+    ACCENT, FEEDBACK_COLOR, IMAGES_DIR, MINIGAME_MUTED as MUTED,
+    MINIGAME_PANEL, MINIGAME_SUCCESS as SUCCESS, TITLE as TEXT,
+    CanvasLabel, CanvasSlider, CosmoHint, MenuButton,
+    draw_minigame_heading, draw_minigame_panel, fit_content,
+)
 from puzzles.orbital_launch import OrbitalLaunchPuzzle
 
 
 # ============================================================
 # ASTRA — Chapter 1: Orbital Launch
-# Temporary UI — Bri can replace the visual elements later.
+# Visual com a identidade do jogo (cores, botões e painel de core/ui.py).
 # ============================================================
 
 WIDTH = 900
 HEIGHT = 600
+SCENE_WIDTH = 680
 
-BG = "#081426"
-PANEL = "#10243A"
-TEXT = "#F3F7FF"
-MUTED = "#A9BDD4"
-ACCENT = "#71D8FF"
-SUCCESS = "#8CE7B0"
-WARNING = "#FFCE80"
+# Imagem da Terra (PNG com fundo transparente). Ela é ajustada sozinha
+# para o tamanho da Terra na física. Sem o arquivo, a Terra é desenhada.
+EARTH_IMAGE = IMAGES_DIR / "terra.png"
 
-EARTH_COLOR = "#3479B9"
+# Cores da cena (as cores gerais vêm de core/ui.py)
+SPACE_BG = "#0A1120"
+STAR_COLORS = ("#FFFFFF", "#CBD5E1", "#8BD3FF", "#64748B")
+EARTH_OCEAN = "#2F6FAE"
+EARTH_LAND = "#4FAF7A"
+EARTH_GLOW = ("#122844", "#18375C", "#1F4A78")  # atmosfera, de fora p/ dentro
 SHIP_COLOR = "#FFFFFF"
-ORBIT_COLOR = "#75CFFF"
+FLAME_COLOR = "#FFB65C"
+ORBIT_COLOR = "#8BD3FF"
 
 
 class OrbitalLaunchUI(tk.Frame):
 
     def __init__(self, master, on_complete=None, on_back=None):
-        super().__init__(master, bg=BG)
+        super().__init__(master, bg=SPACE_BG)
 
         self.puzzle = OrbitalLaunchPuzzle()
 
@@ -42,8 +51,8 @@ class OrbitalLaunchUI(tk.Frame):
 
         self.scale_factor = 0.000025
 
-        self.center_x = 360
-        self.center_y = 300
+        self.center_x = 340
+        self.center_y = 265
 
         self.trajectory = []
 
@@ -71,151 +80,88 @@ class OrbitalLaunchUI(tk.Frame):
 
         self.canvas = tk.Canvas(
             self,
-            width=700,
+            width=WIDTH,
             height=HEIGHT,
-            bg=BG,
+            bg=SPACE_BG,
             highlightthickness=0
         )
 
-        self.canvas.pack(
-            side="left",
-            fill="both",
-            expand=True
+        self.canvas.pack(fill="both", expand=True)
+        c = self.canvas
+
+        # Cenário fixo (desenhado uma vez só)
+        self.draw_stars()
+        self.draw_earth()
+        draw_minigame_heading(
+            c,
+            "CHAPTER 1 — THE WRONG SHIP",
+            "Find the correct orbital velocity."
         )
 
-        self.panel = tk.Frame(
-            self,
-            bg=PANEL,
-            width=200
-        )
+        # Painel lateral
+        draw_minigame_panel(c, "ORBITAL\nLAUNCH")
+        x0, y0, x1, y1 = MINIGAME_PANEL
+        cx = (x0 + x1) / 2
 
-        self.panel.pack(
-            side="right",
-            fill="y"
-        )
+        c.create_text(cx, 135, text="Initial velocity",
+                      font=("Arial", 11), fill=MUTED)
 
-        self.panel.pack_propagate(False)
+        self.velocity_label = CanvasLabel(c, c.create_text(
+            cx, 165, text="7.67 km/s",
+            font=("Arial", 20, "bold"), fill=ACCENT
+        ))
 
-        tk.Label(
-            self.panel,
-            text="ORBITAL\nLAUNCH",
-            font=("Arial", 17, "bold"),
-            fg=TEXT,
-            bg=PANEL,
-            justify="center"
-        ).pack(pady=(35, 12))
-
-        tk.Label(
-            self.panel,
-            text="Initial velocity",
-            font=("Arial", 11),
-            fg=MUTED,
-            bg=PANEL
-        ).pack(pady=(10, 0))
-
-        self.velocity_label = tk.Label(
-            self.panel,
-            text="7.67 km/s",
-            font=("Arial", 15, "bold"),
-            fg=ACCENT,
-            bg=PANEL
-        )
-
-        self.velocity_label.pack(pady=8)
-
-        self.velocity_slider = tk.Scale(
-            self.panel,
-            from_=0,
-            to=15000,
-            resolution=10,
-            orient="horizontal",
+        self.velocity_slider = CanvasSlider(
+            c, x0 + 22, 205, (x1 - x0) - 44,
+            from_=0, to=15000, resolution=10,
             variable=self.velocity_var,
-            command=self.on_velocity_change,
-            bg=PANEL,
-            fg=TEXT,
-            troughcolor="#28445F",
-            activebackground=ACCENT,
-            highlightthickness=0,
-            length=170,
-            showvalue=False
+            command=self.on_velocity_change
         )
 
-        self.velocity_slider.pack(pady=8)
-
-        self.start_button = tk.Button(
-            self.panel,
-            text="LAUNCH",
-            font=("Arial", 11, "bold"),
-            bg="#247DB5",
-            fg=TEXT,
-            activebackground="#369ACF",
-            relief="flat",
-            command=self.start_simulation
+        self.start_button = MenuButton(
+            c, cx, 260, "LAUNCH", self.start_simulation,
+            width=160, height=44, font_size=13, primary=True
         )
 
-        self.start_button.pack(
-            fill="x",
-            padx=20,
-            pady=(25, 8),
-            ipady=8
-        )
-
-        tk.Button(
-            self.panel,
-            text="RESET",
-            font=("Arial", 10, "bold"),
-            bg="#30475D",
-            fg=TEXT,
-            relief="flat",
-            command=self.reset_simulation
-        ).pack(
-            fill="x",
-            padx=20,
-            pady=6,
-            ipady=7
+        MenuButton(
+            c, cx, 312, "RESET", self.reset_simulation,
+            width=160, height=40, font_size=12
         )
 
         if self.on_back is not None:
-            tk.Button(
-                self.panel,
-                text="BACK",
-                font=("Arial", 10),
-                bg=PANEL,
-                fg=MUTED,
-                relief="flat",
-                command=self.go_back
-            ).pack(
-                fill="x",
-                padx=20,
-                pady=12
+            MenuButton(
+                c, cx, 360, "BACK", self.go_back,
+                width=160, height=40, font_size=12
             )
 
-        tk.Label(
-            self.panel,
-            textvariable=self.info_var,
-            font=("Arial", 9),
-            fg=MUTED,
-            bg=PANEL,
-            justify="left",
-            wraplength=175
-        ).pack(
-            padx=12,
-            pady=(25, 10),
-            anchor="w"
+        c.create_line(x0 + 20, 392, x1 - 20, 392, fill="#24324F", width=2)
+
+        info_item = c.create_text(
+            x0 + 22, 408, anchor="nw", width=(x1 - x0) - 40,
+            font=("Arial", 10), fill=MUTED
+        )
+        self.info_var.trace_add(
+            "write",
+            lambda *_: c.itemconfigure(info_item, text=self.info_var.get())
         )
 
-        tk.Label(
-            self.panel,
-            textvariable=self.status_var,
-            font=("Arial", 10, "bold"),
-            fg=ACCENT,
-            bg=PANEL,
-            justify="center",
-            wraplength=175
-        ).pack(
-            padx=12,
-            pady=10
-        )
+        # COSMO comenta o resultado no balão
+        self.hint = CosmoHint(c, right=SCENE_WIDTH - 20)
+        self.status_var.trace_add("write", lambda *_: self.show_status())
+        self.show_status()
+
+    def show_status(self):
+        """Mostra a mensagem no balão do COSMO, colorida pelo resultado."""
+        status = self.puzzle.get_state()["status"]
+
+        if status == "stable_orbit":
+            color = SUCCESS
+        elif status in ("collision", "escape", "elliptical_orbit"):
+            color = FEEDBACK_COLOR
+        else:
+            color = TEXT
+
+        self.hint.set(self.status_var.get(), color)
 
     # --------------------------------------------------------
     # Controls
@@ -379,74 +325,76 @@ class OrbitalLaunchUI(tk.Frame):
 
     def draw_scene(self):
 
-        self.canvas.delete("all")
+        # Apaga só o que se move; cenário e painel ficam.
+        self.canvas.delete("dyn")
 
-        self.draw_stars()
-        self.draw_earth()
         self.draw_trajectory()
         self.draw_ship()
 
-        self.canvas.create_text(
-            25,
-            25,
-            text="CHAPTER 1 — THE WRONG SHIP",
-            fill=TEXT,
-            font=("Arial", 15, "bold"),
-            anchor="nw"
-        )
-
-        self.canvas.create_text(
-            25,
-            55,
-            text="Find the correct orbital velocity.",
-            fill=MUTED,
-            font=("Arial", 10),
-            anchor="nw"
-        )
+        self.hint.raise_()
 
     def draw_stars(self):
 
-        # Deterministic placeholders.
-        for i in range(65):
+        # Posições fixas (sempre as mesmas a cada partida).
+        for i in range(90):
 
-            x = (i * 97 + 31) % 700
+            x = (i * 97 + 31) % SCENE_WIDTH
             y = (i * 157 + 53) % HEIGHT
 
             radius = 1 if i % 3 else 2
+            color = STAR_COLORS[i % len(STAR_COLORS)]
 
             self.canvas.create_oval(
                 x - radius,
                 y - radius,
                 x + radius,
                 y + radius,
-                fill="#7D9AB8",
+                fill=color,
                 outline=""
             )
 
     def draw_earth(self):
+
+        c = self.canvas
+        cx, cy = self.center_x, self.center_y
 
         radius = (
             self.puzzle.EARTH_RADIUS
             * self.scale_factor
         )
 
-        self.canvas.create_oval(
-            self.center_x - radius,
-            self.center_y - radius,
-            self.center_x + radius,
-            self.center_y + radius,
-            fill=EARTH_COLOR,
-            outline="#78C8FF",
-            width=2
+        # Atmosfera: anéis de brilho em volta do planeta
+        for i, color in enumerate(EARTH_GLOW):
+            r = radius + 18 - i * 6
+            c.create_oval(cx - r, cy - r, cx + r, cy + r,
+                          fill=color, outline="")
+
+        # Imagem da Terra, com o planeta do tamanho exato da física
+        if EARTH_IMAGE.exists():
+            self.earth_img, box = fit_content(EARTH_IMAGE, radius * 2)
+            x0, y0, x1, y1 = box
+            c.create_image(
+                cx - (x0 + x1) / 2, cy - (y0 + y1) / 2,
+                image=self.earth_img, anchor="nw"
+            )
+            return
+
+        # Sem imagem: Terra desenhada
+        c.create_oval(
+            cx - radius, cy - radius, cx + radius, cy + radius,
+            fill=EARTH_OCEAN, outline=ACCENT, width=2
         )
 
-        self.canvas.create_text(
-            self.center_x,
-            self.center_y,
-            text="EARTH",
-            fill=TEXT,
-            font=("Arial", 13, "bold")
-        )
+        # Continentes (formas simples dentro do planeta)
+        for dx, dy, w, h in (
+            (-70, -60, 70, 45), (-30, -85, 45, 22), (20, 10, 80, 55),
+            (60, -40, 40, 28), (-90, 30, 45, 40), (-20, 80, 55, 25),
+        ):
+            c.create_oval(
+                cx + dx - w / 2, cy + dy - h / 2,
+                cx + dx + w / 2, cy + dy + h / 2,
+                fill=EARTH_LAND, outline=""
+            )
 
     def draw_trajectory(self):
 
@@ -463,7 +411,8 @@ class OrbitalLaunchUI(tk.Frame):
             *points,
             fill=ORBIT_COLOR,
             width=2,
-            smooth=False
+            dash=(6, 4),
+            tags="dyn"
         )
 
     def draw_ship(self):
@@ -475,17 +424,27 @@ class OrbitalLaunchUI(tk.Frame):
             state["y"]
         )
 
-        # Temporary ship placeholder.
+        # Nave apontando na direção do movimento
+        if state["vx"] or state["vy"]:
+            angle = math.atan2(-state["vy"], state["vx"])
+        else:
+            angle = -math.pi / 2  # parada: aponta para cima (direção do lançamento)
+
+        def point(forward, side):
+            return (
+                x + forward * math.cos(angle) - side * math.sin(angle),
+                y + forward * math.sin(angle) + side * math.cos(angle),
+            )
+
+        if self.running:
+            self.canvas.create_polygon(
+                *point(-8, -5), *point(-20, 0), *point(-8, 5),
+                fill=FLAME_COLOR, outline="", tags="dyn"
+            )
+
         self.canvas.create_polygon(
-            x,
-            y - 10,
-            x - 8,
-            y + 8,
-            x + 8,
-            y + 8,
-            fill=SHIP_COLOR,
-            outline=ACCENT,
-            width=2
+            *point(13, 0), *point(-9, -8), *point(-5, 0), *point(-9, 8),
+            fill=SHIP_COLOR, outline=ACCENT, width=2, tags="dyn"
         )
 
     # --------------------------------------------------------
