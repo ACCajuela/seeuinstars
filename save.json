@@ -1,10 +1,10 @@
 {
-    "language": "en",
-    "scene": "hangar",
+    "language": "pt_BR",
+    "scene": "controle",
     "dialogue_index": 2,
     "choices": {
-        "route": "hangar"
+        "route": "controle"
     },
     "completed_puzzles": [],
-    "pending_puzzle": null
+    "pending_puzzle": "navigation"
 }

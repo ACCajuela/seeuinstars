@@ -193,6 +193,13 @@ ttk.Button(
     command=lambda: choose_language("en")
 ).pack(pady=10)
 
+if save_manager.has_save():
+    ttk.Button(
+        language_frame,
+        text="Continue Game / Continuar jogo",
+        command=load_game
+    ).pack(pady=20)
+
 
 # ==========================================
 # GAME SCREEN
@@ -266,7 +273,6 @@ ttk.Button(
     text="Load Game / Carregar jogo",
     command=load_game
 ).pack(side="left", padx=10)
-
 
 
 # Continue button
