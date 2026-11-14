@@ -2,12 +2,14 @@ import sys
 import tkinter as tk
 import tkinter.font as tkfont
 from pathlib import Path
+from core.audio_manager import AudioManager
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 IMAGES_DIR = PROJECT_ROOT / "assets" / "images"
 FONTS_DIR = PROJECT_ROOT / "assets" / "fonts"
 BACKGROUND_IMAGE = IMAGES_DIR / "fundo-home.png"
 SAVE_FILE = PROJECT_ROOT / "save.json"  # mesmo caminho do SaveManager
+audio_manager = AudioManager()
 
 WIDTH, HEIGHT = 900, 600
 
@@ -70,7 +72,7 @@ class MenuButton:
         if enabled:
             canvas.tag_bind(tag, "<Enter>", lambda e: self._hover(True))
             canvas.tag_bind(tag, "<Leave>", lambda e: self._hover(False))
-            canvas.tag_bind(tag, "<Button-1>", lambda e: self.command())
+            canvas.tag_bind(tag, "<Button-1>", lambda e: self._click())
 
     def _rounded_rect(self, x0, y0, x1, y1, r, tag):
         points = [
@@ -89,6 +91,15 @@ class MenuButton:
     def _hover(self, inside):
         self._paint(BUTTON_HOVER if inside else BUTTON_BG)
         self.canvas.configure(cursor="hand2" if inside else "")
+
+    
+    def _click(self):
+        if not self.enabled:
+            return
+
+        audio_manager.play_effect("click.wav")
+        self.command()
+
 
 
 class TitleScreen(tk.Frame):
@@ -156,12 +167,27 @@ class LanguageScreen(TitleScreen):
         MenuButton(self.canvas, x, y + 20 + MENU_GAP, "English", lambda: on_choose("en"))
 
 
+
 def _flat_button(master, text, command):
+    def play_and_execute():
+        audio_manager.play_effect("click.wav")
+        command()
+
     return tk.Button(
-        master, text=text, command=command, font=("Arial", 13),
-        bg=BUTTON_BG, fg="white", activebackground=BUTTON_HOVER,
-        activeforeground="white", relief="flat", padx=20, pady=6, cursor="hand2",
+        master,
+        text=text,
+        command=play_and_execute,
+        font=("Arial", 13),
+        bg=BUTTON_BG,
+        fg="white",
+        activebackground=BUTTON_HOVER,
+        activeforeground="white",
+        relief="flat",
+        padx=20,
+        pady=6,
+        cursor="hand2",
     )
+
 
 
 class DialogueScreen(tk.Frame):

@@ -1,53 +1,40 @@
 
-import json
+import winsound
 from pathlib import Path
 
 
-class SaveManager:
+class AudioManager:
     def __init__(self):
+        # Pasta onde ficam os arquivos de áudio
         project_root = Path(__file__).resolve().parent.parent
-        self.save_path = project_root / "save.json"
+        self.audio_path = project_root / "shared_assets" / "audio"
 
-    def save_game(self, engine, localization):
-        data = {
-            "language": localization.language,
-            "scene": self.get_scene_id(engine),
-            "dialogue_index": engine.dialogue_index,
-            "choices": engine.choices,
-            "completed_puzzles": list(engine.completed_puzzles),
-            "pending_puzzle": engine.pending_puzzle
-        }
+        # Controle de áudio
+        self.enabled = True
 
-        with open(self.save_path, "w", encoding="utf-8") as file:
-            json.dump(data, file, indent=4, ensure_ascii=False)
+    def play_effect(self, filename):
+        """Reproduz um efeito sonoro WAV."""
+        if not self.enabled:
+            return
 
-        print("Game saved successfully!")
+        file_path = self.audio_path / filename
 
-    def load_game(self, engine, localization):
-        if not self.save_path.exists():
-            print("No saved game found.")
-            return False
+        if not file_path.exists():
+            print(f"Audio file not found: {file_path}")
+            return
 
-        with open(self.save_path, "r", encoding="utf-8") as file:
-            data = json.load(file)
+        winsound.PlaySound(
+            str(file_path),
+            winsound.SND_FILENAME | winsound.SND_ASYNC
+        )
 
-        localization.set_language(data["language"])
+    def stop_audio(self):
+        """Interrompe o áudio atual."""
+        winsound.PlaySound(None, 0)
 
-        engine.change_scene(data["scene"])
-        engine.dialogue_index = data["dialogue_index"]
-        engine.choices = data["choices"]
-        engine.completed_puzzles = set(data["completed_puzzles"])
-        engine.pending_puzzle = data["pending_puzzle"]
+    def set_enabled(self, enabled):
+        """Ativa ou desativa os efeitos sonoros."""
+        self.enabled = enabled
 
-        print("Game loaded successfully!")
-        return True
-
-    def has_save(self):
-        return self.save_path.exists()
-
-    def get_scene_id(self, engine):
-        for scene_id, scene_data in engine.story["scenes"].items():
-            if scene_data is engine.scene:
-                return scene_id
-
-        return engine.story["start_scene"]
+        if not enabled:
+            self.stop_audio()
