@@ -1,40 +1,52 @@
-
+import sys
 import tkinter as tk
-from tkinter import ttk
+from pathlib import Path
+from tkinter import messagebox
 
-# Configuração da janela
-root = tk.Tk()
-root.title("Junior Astronaut - Ada & COSMO")
-root.geometry("900x600")
-root.configure(bg="#101827")
+# Permite rodar tanto "python core/main.py" quanto "python -m core.main"
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-# Nome do personagem
-character_name = tk.Label(
-    root,
-    text="COSMO",
-    font=("Arial", 16, "bold"),
-    fg="#8BD3FF",
-    bg="#101827"
-)
-character_name.pack(pady=(40, 10))
+from core.ui import BG, HEIGHT, WIDTH, DialogueScreen, HomeScreen, load_project_fonts
 
-# Área de diálogo
-dialogue = tk.Label(
-    root,
-    text="Olá, Ada! Pronta para nossa aventura espacial?",
-    font=("Arial", 15),
-    fg="white",
-    bg="#101827",
-    wraplength=750,
-    justify="center"
-)
-dialogue.pack(pady=20)
 
-# Botão de avançar
-next_button = ttk.Button(
-    root,
-    text="Continuar"
-)
-next_button.pack(pady=20)
+class App(tk.Tk):
+    def __init__(self):
+        load_project_fonts()
+        super().__init__()
+        self.title("Junior Astronaut - Ada & COSMO")
+        self.geometry(f"{WIDTH}x{HEIGHT}")
+        self.resizable(False, False)
+        self.configure(bg=BG)
+        self.current = None
+        self.show_home()
 
-root.mainloop()
+    def _switch(self, screen):
+        if self.current is not None:
+            self.current.destroy()
+        self.current = screen
+        self.current.pack(fill="both", expand=True)
+
+    def show_home(self):
+        self._switch(HomeScreen(
+            self,
+            on_new_game=self.new_game,
+            on_continue=self.continue_game,
+            on_options=self.options,
+            on_quit=self.destroy,
+        ))
+
+    def new_game(self):
+        self._switch(DialogueScreen(
+            self, "COSMO", "Olá, Ada! Pronta para nossa aventura espacial?",
+            on_next=self.show_home,
+        ))
+
+    def continue_game(self):
+        messagebox.showinfo("Continuar", "Carregar jogo salvo: em breve!")
+
+    def options(self):
+        messagebox.showinfo("Opções", "Volume, idioma etc.: em breve!")
+
+
+if __name__ == "__main__":
+    App().mainloop()
