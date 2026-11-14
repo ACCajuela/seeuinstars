@@ -138,18 +138,62 @@ class HomeScreen(tk.Frame):
         MenuButton(self.canvas, x, y + gap * 3, "Sair", on_quit)
 
 
-class DialogueScreen(tk.Frame):
-    """Tela de diálogo simples (será ligada ao engine/story.json depois)."""
+def _flat_button(master, text, command):
+    return tk.Button(
+        master, text=text, command=command, font=("Arial", 13),
+        bg=BUTTON_BG, fg="white", activebackground=BUTTON_HOVER,
+        activeforeground="white", relief="flat", padx=20, pady=6, cursor="hand2",
+    )
 
-    def __init__(self, master, speaker, text, on_next):
+
+class DialogueScreen(tk.Frame):
+    """Tela de diálogo: mostra as falas do StoryEngine e os botões de escolha."""
+
+    def __init__(self, master, engine, on_end):
         super().__init__(master, bg=BG)
-        tk.Label(self, text=speaker, font=("Arial", 16, "bold"), fg=ACCENT, bg=BG).pack(pady=(40, 10))
-        tk.Label(
-            self, text=text, font=("Arial", 15), fg="white", bg=BG,
+        self.engine = engine
+        self.on_end = on_end
+
+        self.speaker = tk.Label(self, font=("Arial", 16, "bold"), fg=ACCENT, bg=BG)
+        self.speaker.pack(pady=(40, 10))
+        self.text = tk.Label(
+            self, font=("Arial", 15), fg="white", bg=BG,
             wraplength=750, justify="center",
-        ).pack(pady=20)
-        tk.Button(
-            self, text="Continuar", command=on_next, font=("Arial", 13),
-            bg=BUTTON_BG, fg="white", activebackground=BUTTON_HOVER,
-            activeforeground="white", relief="flat", padx=20, pady=6,
-        ).pack(pady=20)
+        )
+        self.text.pack(pady=20)
+
+        self.choices_frame = tk.Frame(self, bg=BG)
+        self.choices_frame.pack(pady=10)
+        self.next_button = _flat_button(self, "Continuar", self.next_dialogue)
+
+        self.next_dialogue()
+
+    def next_dialogue(self):
+        for widget in self.choices_frame.winfo_children():
+            widget.destroy()
+
+        data = self.engine.next_dialogue()
+
+        if data is None:
+            self.speaker.config(text="")
+            self.text.config(text="Fim do capítulo 1!")
+            self.next_button.config(text="Voltar ao menu", command=self.on_end)
+            self.next_button.pack(pady=20)
+            return
+
+        self.speaker.config(text=data["speaker"])
+        self.text.config(text=data["text"])
+
+        if "choices" in data:
+            self.next_button.pack_forget()
+            for choice in data["choices"]:
+                _flat_button(
+                    self.choices_frame, choice["text"],
+                    lambda choice_id=choice["id"]: self.select_choice(choice_id),
+                ).pack(pady=5)
+        else:
+            self.next_button.pack(pady=20)
+
+    def select_choice(self, choice_id):
+        self.engine.make_choice(choice_id)
+        self.next_dialogue()

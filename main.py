@@ -1,11 +1,7 @@
-import sys
 import tkinter as tk
-from pathlib import Path
 from tkinter import messagebox
 
-# Permite rodar tanto "python core/main.py" quanto "python -m core.main"
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
+from core.engine import StoryEngine
 from core.ui import BG, HEIGHT, WIDTH, DialogueScreen, HomeScreen, load_project_fonts
 
 
@@ -13,7 +9,7 @@ class App(tk.Tk):
     def __init__(self):
         load_project_fonts()
         super().__init__()
-        self.title("Junior Astronaut - Ada & COSMO")
+        self.title("See U in Stars")
         self.geometry(f"{WIDTH}x{HEIGHT}")
         self.resizable(False, False)
         self.configure(bg=BG)
@@ -36,10 +32,7 @@ class App(tk.Tk):
         ))
 
     def new_game(self):
-        self._switch(DialogueScreen(
-            self, "COSMO", "Olá, Ada! Pronta para nossa aventura espacial?",
-            on_next=self.show_home,
-        ))
+        self._switch(DialogueScreen(self, StoryEngine(), on_end=self.show_home))
 
     def continue_game(self):
         messagebox.showinfo("Continuar", "Carregar jogo salvo: em breve!")
