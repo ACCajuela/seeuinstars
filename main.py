@@ -4,11 +4,13 @@ from tkinter import ttk
 
 from core.engine import StoryEngine
 from core.localization_manager import LocalizationManager
+from core.save_manager import SaveManager
 
 
 # Initialize game systems
 engine = StoryEngine()
 localization = LocalizationManager("en")
+save_manager = SaveManager()
 
 
 # Main window
@@ -121,6 +123,34 @@ def answer_puzzle(puzzle_id, option_index):
         next_button.pack(pady=20)
 
 
+def save_game():
+    save_manager.save_game(engine, localization)
+    print("Progress saved!")
+
+
+def load_game():
+    if not save_manager.load_game(engine, localization):
+        return
+
+    language_frame.pack_forget()
+    game_frame.pack(fill="both", expand=True)
+
+    next_button.config(text=localization.get("ui.continue"))
+
+    clear_choices()
+    feedback.config(text="")
+
+    if engine.pending_puzzle:
+        show_puzzle(engine.pending_puzzle)
+    else:
+        # Restore the current scene without advancing
+        if engine.dialogue_index > 0:
+            engine.dialogue_index -= 1
+
+        next_dialogue()
+
+
+
 # ==========================================
 # LANGUAGE SELECTION SCREEN
 # ==========================================
@@ -219,6 +249,24 @@ feedback = tk.Label(
 )
 
 feedback.pack(pady=10)
+
+
+# Save and load buttons
+save_frame = tk.Frame(game_frame, bg="#101827")
+save_frame.pack(pady=15)
+
+ttk.Button(
+    save_frame,
+    text="Save Game / Salvar jogo",
+    command=save_game
+).pack(side="left", padx=10)
+
+ttk.Button(
+    save_frame,
+    text="Load Game / Carregar jogo",
+    command=load_game
+).pack(side="left", padx=10)
+
 
 
 # Continue button

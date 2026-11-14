@@ -1,0 +1,10 @@
+{
+    "language": "en",
+    "scene": "hangar",
+    "dialogue_index": 2,
+    "choices": {
+        "route": "hangar"
+    },
+    "completed_puzzles": [],
+    "pending_puzzle": null
+}
