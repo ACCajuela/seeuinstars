@@ -1,0 +1,28 @@
+
+{
+  "chapter": 1,
+  "title": "A Nave Errada",
+  "start_scene": "intro",
+  "scenes": {
+    "intro": {
+      "dialogues": [
+        {
+          "speaker": "Ada",
+          "text": "COSMO! Você viu a Vera?"
+        },
+        {
+          "speaker": "COSMO",
+          "text": "A última localização registrada foi no terminal de cargas."
+        },
+        {
+          "speaker": "Ada",
+          "text": "Terminal de cargas?! Ela não pode ter entrado naquela nave!"
+        },
+        {
+          "speaker": "COSMO",
+          "text": "Detectei uma nave cargueira partindo há três minutos."
+        }
+      ]
+    }
+  }
+}
