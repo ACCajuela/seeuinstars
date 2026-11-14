@@ -1,37 +1,37 @@
 
 {
   "chapter": 1,
-  "title": "A Nave Errada",
+  "title_key": "chapter_01.title",
   "start_scene": "intro",
   "scenes": {
     "intro": {
       "dialogues": [
         {
           "speaker": "Ada",
-          "text": "COSMO! Você viu a Vera?"
+          "text_key": "chapter_01.ada_01"
         },
         {
           "speaker": "COSMO",
-          "text": "A última localização registrada foi no terminal de cargas."
+          "text_key": "chapter_01.cosmo_01"
         },
         {
           "speaker": "Ada",
-          "text": "Terminal de cargas?! Ela não pode ter entrado naquela nave!"
+          "text_key": "chapter_01.ada_02"
         },
         {
           "speaker": "COSMO",
-          "text": "Detectei uma nave cargueira partindo há três minutos."
+          "text_key": "chapter_01.cosmo_02"
         },
         {
           "speaker": "COSMO",
-          "text": "Ada, precisamos alcançar a nave da Vera! Por onde vamos?",
+          "text_key": "chapter_01.cosmo_03",
           "choices": [
             {
-              "text": "Ir pelo hangar",
+              "text_key": "chapter_01.choice_hangar",
               "id": "hangar"
             },
             {
-              "text": "Ir pela central de controle",
+              "text_key": "chapter_01.choice_control",
               "id": "controle"
             }
           ]
@@ -42,11 +42,11 @@
       "dialogues": [
         {
           "speaker": "Ada",
-          "text": "Vamos pelo hangar! Deve existir alguma nave que consiga alcançar a Vera."
+          "text_key": "chapter_01.hangar_ada"
         },
         {
           "speaker": "COSMO",
-          "text": "Boa ideia! Mas precisamos calcular quanto combustível será necessário para a viagem."
+          "text_key": "chapter_01.hangar_cosmo"
         }
       ],
       "puzzle": "fuel_calculation",
@@ -56,11 +56,11 @@
       "dialogues": [
         {
           "speaker": "Ada",
-          "text": "Vamos à central de controle. Talvez consigamos descobrir para onde a nave foi."
+          "text_key": "chapter_01.control_ada"
         },
         {
           "speaker": "COSMO",
-          "text": "Encontrei as coordenadas! Precisamos interpretar os dados de navegação."
+          "text_key": "chapter_01.control_cosmo"
         }
       ],
       "puzzle": "navigation",
@@ -70,11 +70,11 @@
       "dialogues": [
         {
           "speaker": "Ada",
-          "text": "Pronto, COSMO! Agora sabemos como seguir a Vera."
+          "text_key": "chapter_01.reunion_ada"
         },
         {
           "speaker": "COSMO",
-          "text": "Excelente trabalho, Ada! Nossa aventura está apenas começando."
+          "text_key": "chapter_01.reunion_cosmo"
         }
       ]
     }

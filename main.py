@@ -3,68 +3,191 @@ import tkinter as tk
 from tkinter import ttk
 
 from core.engine import StoryEngine
+from core.localization_manager import LocalizationManager
 
-# Inicializa o motor narrativo
+
+# Initialize game systems
 engine = StoryEngine()
+localization = LocalizationManager("en")
 
-# Configuração da janela
+
+# Main window
 root = tk.Tk()
 root.title("See U in Stars")
 root.geometry("900x600")
 root.configure(bg="#101827")
 
 
-
-def next_dialogue():
-    dialogue_data = engine.next_dialogue()
-
-    if dialogue_data is None:
-        character_name.config(text="")
-        dialogue.config(text="Fim do capítulo 1!")
-        next_button.config(state="disabled")
-        return
-
-    character_name.config(text=dialogue_data["speaker"])
-    dialogue.config(text=dialogue_data["text"])
-
-    # Remove escolhas anteriores
+def clear_choices():
     for widget in choices_frame.winfo_children():
         widget.destroy()
 
-    # Verifica se o diálogo possui escolhas
+
+def choose_language(language):
+    localization.set_language(language)
+
+    language_frame.pack_forget()
+    game_frame.pack(fill="both", expand=True)
+
+    next_button.config(
+        text=localization.get("ui.continue")
+    )
+
+    next_dialogue()
+
+
+def next_dialogue():
+    clear_choices()
+    feedback.config(text="")
+
+    dialogue_data = engine.next_dialogue()
+
+    # End of chapter
+    if dialogue_data is None:
+        character_name.config(text="")
+        dialogue.config(
+            text=localization.get("ui.chapter_end")
+        )
+        next_button.pack_forget()
+        return
+
+    # Puzzle event
+    if dialogue_data.get("type") == "puzzle":
+        show_puzzle(dialogue_data["id"])
+        return
+
+    # Display dialogue
+    character_name.config(
+        text=dialogue_data["speaker"]
+    )
+
+    dialogue.config(
+        text=localization.get(dialogue_data["text_key"])
+    )
+
+    # Display choices
     if "choices" in dialogue_data:
         next_button.pack_forget()
 
         for choice in dialogue_data["choices"]:
             ttk.Button(
                 choices_frame,
-                text=choice["text"],
+                text=localization.get(choice["text_key"]),
                 command=lambda choice_id=choice["id"]: select_choice(choice_id)
             ).pack(pady=5)
+
     else:
         next_button.pack(pady=20)
 
 
 def select_choice(choice_id):
     engine.make_choice(choice_id)
-    next_button.pack(pady=20)
     next_dialogue()
 
 
+def show_puzzle(puzzle_id):
+    puzzle = engine.get_puzzle(puzzle_id)
 
-# Nome do personagem
-character_name = tk.Label(
+    character_name.config(
+        text=localization.get("ui.challenge")
+    )
+
+    dialogue.config(
+        text=localization.get(puzzle["question_key"])
+    )
+
+    next_button.pack_forget()
+
+    for index, option in enumerate(puzzle["options"]):
+        ttk.Button(
+            choices_frame,
+            text=localization.get(option["text_key"]),
+            command=lambda i=index: answer_puzzle(puzzle_id, i)
+        ).pack(pady=5)
+
+
+def answer_puzzle(puzzle_id, option_index):
+    correct, message_key = engine.answer_puzzle(
+        puzzle_id,
+        option_index
+    )
+
+    feedback.config(
+        text=localization.get(message_key)
+    )
+
+    if correct:
+        clear_choices()
+        next_button.pack(pady=20)
+
+
+# ==========================================
+# LANGUAGE SELECTION SCREEN
+# ==========================================
+
+language_frame = tk.Frame(
     root,
+    bg="#101827"
+)
+
+language_frame.pack(
+    fill="both",
+    expand=True
+)
+
+tk.Label(
+    language_frame,
+    text="SEE U IN STARS",
+    font=("Arial", 28, "bold"),
+    fg="#8BD3FF",
+    bg="#101827"
+).pack(pady=(110, 25))
+
+tk.Label(
+    language_frame,
+    text="Choose your language / Escolha seu idioma",
+    font=("Arial", 15),
+    fg="white",
+    bg="#101827"
+).pack(pady=15)
+
+ttk.Button(
+    language_frame,
+    text="Português (Brasil)",
+    command=lambda: choose_language("pt_BR")
+).pack(pady=10)
+
+ttk.Button(
+    language_frame,
+    text="English",
+    command=lambda: choose_language("en")
+).pack(pady=10)
+
+
+# ==========================================
+# GAME SCREEN
+# ==========================================
+
+game_frame = tk.Frame(
+    root,
+    bg="#101827"
+)
+
+# Character name
+character_name = tk.Label(
+    game_frame,
     text="",
     font=("Arial", 16, "bold"),
     fg="#8BD3FF",
     bg="#101827"
 )
+
 character_name.pack(pady=(40, 10))
 
-# Área de diálogo
+
+# Dialogue text
 dialogue = tk.Label(
-    root,
+    game_frame,
     text="",
     font=("Arial", 15),
     fg="white",
@@ -72,20 +195,39 @@ dialogue = tk.Label(
     wraplength=750,
     justify="center"
 )
+
 dialogue.pack(pady=20)
 
-choices_frame = tk.Frame(root, bg="#101827")
+
+# Choices container
+choices_frame = tk.Frame(
+    game_frame,
+    bg="#101827"
+)
+
 choices_frame.pack(pady=10)
 
-# Botão de avançar
+
+# Puzzle feedback
+feedback = tk.Label(
+    game_frame,
+    text="",
+    font=("Arial", 13),
+    fg="#FFD166",
+    bg="#101827",
+    wraplength=750
+)
+
+feedback.pack(pady=10)
+
+
+# Continue button
 next_button = ttk.Button(
-    root,
-    text="Continuar",
+    game_frame,
+    text="Continue",
     command=next_dialogue
 )
-next_button.pack(pady=20)
 
-# Exibe o primeiro diálogo automaticamente
-next_dialogue()
 
+# Start application
 root.mainloop()

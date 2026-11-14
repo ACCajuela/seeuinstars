@@ -1,0 +1,40 @@
+
+{
+  "ui": {
+    "continue": "Continue",
+    "save": "Save Game",
+    "load": "Load Game",
+    "chapter_end": "End of Chapter 1!",
+    "challenge": "CHALLENGE",
+    "choose_language": "Choose your language"
+  },
+  "chapter_01": {
+    "ada_01": "COSMO! Have you seen Vera?",
+    "cosmo_01": "Her last recorded location was the cargo terminal.",
+    "ada_02": "The cargo terminal?! She couldn't have boarded that ship!",
+    "cosmo_02": "I detected a cargo spaceship departing three minutes ago.",
+    "cosmo_03": "Ada, we need to catch up with Vera's ship! Which way should we go?",
+    "choice_hangar": "Go to the hangar",
+    "choice_control": "Go to mission control",
+    "hangar_ada": "Let's go through the hangar! There must be a ship that can reach Vera.",
+    "hangar_cosmo": "Good idea! But first, we need to calculate how much fuel we'll need.",
+    "control_ada": "Let's go to mission control. Maybe we can find out where the ship went.",
+    "control_cosmo": "I found the coordinates! We need to understand the navigation data.",
+    "reunion_ada": "We did it, COSMO! Now we know how to follow Vera.",
+    "reunion_cosmo": "Great job, Ada! Our adventure is just beginning."
+  },
+  "puzzles": {
+    "fuel_question": "A spaceship needs 5 units of fuel for each part of its journey. How much fuel does it need for 3 parts?",
+    "fuel_option_1": "10 units",
+    "fuel_option_2": "15 units",
+    "fuel_option_3": "20 units",
+    "fuel_success": "Well done! 5 × 3 = 15 units of fuel.",
+    "fuel_failure": "Almost! Multiply the fuel needed for each part by the number of parts.",
+    "navigation_question": "COSMO found three routes. Which one leads north?",
+    "navigation_option_1": "The route pointing up on the map",
+    "navigation_option_2": "The route pointing down on the map",
+    "navigation_option_3": "The route pointing right on the map",
+    "navigation_success": "Correct! On a conventional map, north is at the top.",
+    "navigation_failure": "Look at the map's orientation. North is usually shown at the top."
+  }
+}
