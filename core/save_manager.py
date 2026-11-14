@@ -8,8 +8,9 @@ class SaveManager:
         project_root = Path(__file__).resolve().parent.parent
         self.save_path = project_root / "save.json"
 
-    def save_game(self, engine):
+    def save_game(self, engine, localization):
         data = {
+            "language": localization.language,
             "scene": self.get_scene_id(engine),
             "dialogue_index": engine.dialogue_index,
             "choices": engine.choices,
@@ -20,15 +21,17 @@ class SaveManager:
         with open(self.save_path, "w", encoding="utf-8") as file:
             json.dump(data, file, indent=4, ensure_ascii=False)
 
-        print("Jogo salvo com sucesso!")
+        print("Game saved successfully!")
 
-    def load_game(self, engine):
+    def load_game(self, engine, localization):
         if not self.save_path.exists():
-            print("Nenhum jogo salvo encontrado.")
+            print("No saved game found.")
             return False
 
         with open(self.save_path, "r", encoding="utf-8") as file:
             data = json.load(file)
+
+        localization.set_language(data["language"])
 
         engine.change_scene(data["scene"])
         engine.dialogue_index = data["dialogue_index"]
@@ -36,8 +39,11 @@ class SaveManager:
         engine.completed_puzzles = set(data["completed_puzzles"])
         engine.pending_puzzle = data["pending_puzzle"]
 
-        print("Jogo carregado com sucesso!")
+        print("Game loaded successfully!")
         return True
+
+    def has_save(self):
+        return self.save_path.exists()
 
     def get_scene_id(self, engine):
         for scene_id, scene_data in engine.story["scenes"].items():

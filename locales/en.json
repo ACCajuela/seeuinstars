@@ -9,7 +9,9 @@
     "new_game": "New Game",
     "options": "Options",
     "quit": "Quit",
-    "back_to_menu": "Back to menu"
+    "back_to_menu": "Back to menu",
+    "menu": "Menu",
+    "saved": "Game saved!"
   },
   "chapter_01": {
     "ada_01": "COSMO! Have you seen Vera?",

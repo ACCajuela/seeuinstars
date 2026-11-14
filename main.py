@@ -51,15 +51,27 @@ class App(tk.Tk):
         ))
 
     def _start(self, engine):
-        self._switch(DialogueScreen(self, engine, self.t, on_end=self.show_home))
+        self._switch(DialogueScreen(
+            self, engine, self.t,
+            on_end=self.show_home,
+            on_save=self.save_game,
+        ))
 
     def new_game(self):
         self._start(StoryEngine())
 
+    def save_game(self, engine):
+        self.save_manager.save_game(engine, self.localization)
+
     def continue_game(self):
         engine = StoryEngine()
-        if self.save_manager.load_game(engine):
-            self._start(engine)
+        if not self.save_manager.load_game(engine, self.localization):
+            return
+        # Mostra de novo a fala em que o jogador parou (sem pular para a próxima).
+        # Se havia um desafio pendente, o engine já volta direto para ele.
+        if not engine.pending_puzzle and engine.dialogue_index > 0:
+            engine.dialogue_index -= 1
+        self._start(engine)
 
 
 if __name__ == "__main__":

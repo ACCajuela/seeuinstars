@@ -167,11 +167,18 @@ def _flat_button(master, text, command):
 class DialogueScreen(tk.Frame):
     """Tela de diálogo: falas do StoryEngine, escolhas e quebra-cabeças."""
 
-    def __init__(self, master, engine, t, on_end):
+    def __init__(self, master, engine, t, on_end, on_save):
         super().__init__(master, bg=BG)
         self.engine = engine
         self.t = t
         self.on_end = on_end
+        self.on_save = on_save
+
+        # Barra inferior: salvar e voltar ao menu
+        bar = tk.Frame(self, bg=BG)
+        bar.pack(side="bottom", pady=20)
+        _flat_button(bar, t("ui.save"), self.save).pack(side="left", padx=8)
+        _flat_button(bar, t("ui.menu"), on_end).pack(side="left", padx=8)
 
         self.speaker = tk.Label(self, font=("Arial", 16, "bold"), fg=ACCENT, bg=BG)
         self.speaker.pack(pady=(40, 10))
@@ -190,6 +197,10 @@ class DialogueScreen(tk.Frame):
         self.next_button = _flat_button(self, t("ui.continue"), self.next_dialogue)
 
         self.next_dialogue()
+
+    def save(self):
+        self.on_save(self.engine)
+        self.feedback.config(text=self.t("ui.saved"))
 
     def _clear_choices(self):
         for widget in self.choices_frame.winfo_children():
