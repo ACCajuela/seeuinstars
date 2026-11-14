@@ -1,4 +1,3 @@
-
 {
   "ui": {
     "continue": "Continuar",
@@ -6,7 +5,13 @@
     "load": "Carregar jogo",
     "chapter_end": "Fim do capítulo 1!",
     "challenge": "DESAFIO",
-    "choose_language": "Escolha seu idioma"
+    "choose_language": "Escolha seu idioma",
+    "new_game": "Novo Jogo",
+    "options": "Opções",
+    "quit": "Sair",
+    "back_to_menu": "Voltar ao menu",
+    "menu": "Menu",
+    "saved": "Jogo salvo!"
   },
   "chapter_01": {
     "ada_01": "COSMO! Você viu a Vera?",
