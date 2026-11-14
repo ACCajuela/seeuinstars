@@ -1,4 +1,3 @@
-
 {
   "ui": {
     "continue": "Continue",
@@ -6,7 +5,13 @@
     "load": "Load Game",
     "chapter_end": "End of Chapter 1!",
     "challenge": "CHALLENGE",
-    "choose_language": "Choose your language"
+    "choose_language": "Choose your language",
+    "new_game": "New Game",
+    "options": "Options",
+    "quit": "Quit",
+    "back_to_menu": "Back to menu",
+    "menu": "Menu",
+    "saved": "Game saved!"
   },
   "chapter_01": {
     "ada_01": "COSMO! Have you seen Vera?",

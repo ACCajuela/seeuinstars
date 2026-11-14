@@ -1,287 +1,108 @@
 
 import tkinter as tk
-from tkinter import ttk
 
 from core.engine import StoryEngine
 from core.localization_manager import LocalizationManager
 from core.save_manager import SaveManager
+from core.ui import (
+    BG, HEIGHT, WIDTH,
+    DialogueScreen, HomeScreen, LanguageScreen,
+    load_project_fonts,
+)
 
 
-# Initialize game systems
-engine = StoryEngine()
-localization = LocalizationManager("en")
-save_manager = SaveManager()
+class App(tk.Tk):
+    def __init__(self):
+        super().__init__()
 
+        load_project_fonts()
 
-# Main window
-root = tk.Tk()
-root.title("See U in Stars")
-root.geometry("900x600")
-root.configure(bg="#101827")
+        self.title("See U in Stars")
+        self.geometry(f"{WIDTH}x{HEIGHT}")
+        self.resizable(False, False)
+        self.configure(bg=BG)
 
+        self.localization = LocalizationManager("en")
+        self.save_manager = SaveManager()
 
-def clear_choices():
-    for widget in choices_frame.winfo_children():
-        widget.destroy()
+        self.current = None
 
+        # Language -> Home -> Game
+        self.show_language()
 
-def choose_language(language):
-    localization.set_language(language)
+    def t(self, key):
+        return self.localization.get(key)
 
-    language_frame.pack_forget()
-    game_frame.pack(fill="both", expand=True)
+    def _switch(self, screen):
+        if self.current is not None:
+            self.current.destroy()
 
-    next_button.config(
-        text=localization.get("ui.continue")
-    )
+        self.current = screen
+        self.current.pack(fill="both", expand=True)
 
-    next_dialogue()
-
-
-def next_dialogue():
-    clear_choices()
-    feedback.config(text="")
-
-    dialogue_data = engine.next_dialogue()
-
-    # End of chapter
-    if dialogue_data is None:
-        character_name.config(text="")
-        dialogue.config(
-            text=localization.get("ui.chapter_end")
+    def show_language(self):
+        self._switch(
+            LanguageScreen(
+                self,
+                on_choose=self.choose_language
+            )
         )
-        next_button.pack_forget()
-        return
 
-    # Puzzle event
-    if dialogue_data.get("type") == "puzzle":
-        show_puzzle(dialogue_data["id"])
-        return
+    def choose_language(self, language):
+        self.localization.set_language(language)
+        self.show_home()
 
-    # Display dialogue
-    character_name.config(
-        text=dialogue_data["speaker"]
-    )
+    def show_home(self):
+        self._switch(
+            HomeScreen(
+                self,
+                self.t,
+                on_new_game=self.new_game,
+                on_continue=self.continue_game,
+                on_options=self.show_language,
+                on_quit=self.destroy,
+            )
+        )
 
-    dialogue.config(
-        text=localization.get(dialogue_data["text_key"])
-    )
+    def _start(self, engine):
+        self._switch(
+            DialogueScreen(
+                self,
+                engine,
+                self.t,
+                on_end=self.show_home,
+                on_save=self.save_game,
+            )
+        )
 
-    # Display choices
-    if "choices" in dialogue_data:
-        next_button.pack_forget()
+    def new_game(self):
+        self._start(StoryEngine())
 
-        for choice in dialogue_data["choices"]:
-            ttk.Button(
-                choices_frame,
-                text=localization.get(choice["text_key"]),
-                command=lambda choice_id=choice["id"]: select_choice(choice_id)
-            ).pack(pady=5)
+    def save_game(self, engine):
+        self.save_manager.save_game(
+            engine,
+            self.localization
+        )
 
-    else:
-        next_button.pack(pady=20)
+    def continue_game(self):
+        engine = StoryEngine()
 
+        if not self.save_manager.load_game(
+            engine,
+            self.localization
+        ):
+            return
 
-def select_choice(choice_id):
-    engine.make_choice(choice_id)
-    next_dialogue()
-
-
-def show_puzzle(puzzle_id):
-    puzzle = engine.get_puzzle(puzzle_id)
-
-    character_name.config(
-        text=localization.get("ui.challenge")
-    )
-
-    dialogue.config(
-        text=localization.get(puzzle["question_key"])
-    )
-
-    next_button.pack_forget()
-
-    for index, option in enumerate(puzzle["options"]):
-        ttk.Button(
-            choices_frame,
-            text=localization.get(option["text_key"]),
-            command=lambda i=index: answer_puzzle(puzzle_id, i)
-        ).pack(pady=5)
-
-
-def answer_puzzle(puzzle_id, option_index):
-    correct, message_key = engine.answer_puzzle(
-        puzzle_id,
-        option_index
-    )
-
-    feedback.config(
-        text=localization.get(message_key)
-    )
-
-    if correct:
-        clear_choices()
-        next_button.pack(pady=20)
-
-
-def save_game():
-    save_manager.save_game(engine, localization)
-    print("Progress saved!")
-
-
-def load_game():
-    if not save_manager.load_game(engine, localization):
-        return
-
-    language_frame.pack_forget()
-    game_frame.pack(fill="both", expand=True)
-
-    next_button.config(text=localization.get("ui.continue"))
-
-    clear_choices()
-    feedback.config(text="")
-
-    if engine.pending_puzzle:
-        show_puzzle(engine.pending_puzzle)
-    else:
-        # Restore the current scene without advancing
-        if engine.dialogue_index > 0:
+        # Restore the current dialogue
+        if (
+            not engine.pending_puzzle
+            and engine.dialogue_index > 0
+        ):
             engine.dialogue_index -= 1
 
-        next_dialogue()
+        self._start(engine)
 
 
-
-# ==========================================
-# LANGUAGE SELECTION SCREEN
-# ==========================================
-
-language_frame = tk.Frame(
-    root,
-    bg="#101827"
-)
-
-language_frame.pack(
-    fill="both",
-    expand=True
-)
-
-tk.Label(
-    language_frame,
-    text="SEE U IN STARS",
-    font=("Arial", 28, "bold"),
-    fg="#8BD3FF",
-    bg="#101827"
-).pack(pady=(110, 25))
-
-tk.Label(
-    language_frame,
-    text="Choose your language / Escolha seu idioma",
-    font=("Arial", 15),
-    fg="white",
-    bg="#101827"
-).pack(pady=15)
-
-ttk.Button(
-    language_frame,
-    text="Português (Brasil)",
-    command=lambda: choose_language("pt_BR")
-).pack(pady=10)
-
-ttk.Button(
-    language_frame,
-    text="English",
-    command=lambda: choose_language("en")
-).pack(pady=10)
-
-if save_manager.has_save():
-    ttk.Button(
-        language_frame,
-        text="Continue Game / Continuar jogo",
-        command=load_game
-    ).pack(pady=20)
-
-
-# ==========================================
-# GAME SCREEN
-# ==========================================
-
-game_frame = tk.Frame(
-    root,
-    bg="#101827"
-)
-
-# Character name
-character_name = tk.Label(
-    game_frame,
-    text="",
-    font=("Arial", 16, "bold"),
-    fg="#8BD3FF",
-    bg="#101827"
-)
-
-character_name.pack(pady=(40, 10))
-
-
-# Dialogue text
-dialogue = tk.Label(
-    game_frame,
-    text="",
-    font=("Arial", 15),
-    fg="white",
-    bg="#101827",
-    wraplength=750,
-    justify="center"
-)
-
-dialogue.pack(pady=20)
-
-
-# Choices container
-choices_frame = tk.Frame(
-    game_frame,
-    bg="#101827"
-)
-
-choices_frame.pack(pady=10)
-
-
-# Puzzle feedback
-feedback = tk.Label(
-    game_frame,
-    text="",
-    font=("Arial", 13),
-    fg="#FFD166",
-    bg="#101827",
-    wraplength=750
-)
-
-feedback.pack(pady=10)
-
-
-# Save and load buttons
-save_frame = tk.Frame(game_frame, bg="#101827")
-save_frame.pack(pady=15)
-
-ttk.Button(
-    save_frame,
-    text="Save Game / Salvar jogo",
-    command=save_game
-).pack(side="left", padx=10)
-
-ttk.Button(
-    save_frame,
-    text="Load Game / Carregar jogo",
-    command=load_game
-).pack(side="left", padx=10)
-
-
-# Continue button
-next_button = ttk.Button(
-    game_frame,
-    text="Continue",
-    command=next_dialogue
-)
-
-
-# Start application
-root.mainloop()
+if __name__ == "__main__":
+    app = App()
+    app.mainloop()
