@@ -43,6 +43,7 @@ def font_or_fallback(family, fallback="Arial"):
     return family if family in tkfont.families() else fallback
 
 audio_manager = AudioManager()  # efeitos sonoros (clique, acerto, erro)
+audio_manager.play_music("background.wav")
 
 # Paleta
 BG = "#101827"

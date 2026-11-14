@@ -1,19 +1,23 @@
 
-import winsound
 from pathlib import Path
+import pygame
 
 
 class AudioManager:
     def __init__(self):
-        # Pasta onde ficam os arquivos de áudio
-        project_root = Path(__file__).resolve().parent.parent
-        self.audio_path = project_root / "shared_assets" / "audio"
+        self.audio_path = (
+            Path(__file__).resolve().parent.parent
+            / "shared_assets" / "audio"
+        )
 
-        # Controle de áudio
+        pygame.mixer.init()
+
         self.enabled = True
+        self.music_volume = 0.25
+        self.effects_volume = 0.65
+        self.effects = {}
 
     def play_effect(self, filename):
-        """Reproduz um efeito sonoro WAV."""
         if not self.enabled:
             return
 
@@ -23,24 +27,54 @@ class AudioManager:
             print(f"Audio file not found: {file_path}")
             return
 
-        winsound.PlaySound(
-            str(file_path),
-            winsound.SND_FILENAME | winsound.SND_ASYNC
+        if filename not in self.effects:
+            self.effects[filename] = pygame.mixer.Sound(
+                str(file_path)
+            )
+
+        sound = self.effects[filename]
+        sound.set_volume(self.effects_volume)
+        sound.play()
+
+    def play_music(self, filename="background.wav"):
+        file_path = self.audio_path / filename
+
+        if not file_path.exists():
+            print(f"Music file not found: {file_path}")
+            return
+
+        pygame.mixer.music.load(str(file_path))
+        pygame.mixer.music.set_volume(
+            self.music_volume if self.enabled else 0
+        )
+        pygame.mixer.music.play(-1)
+
+    def set_music_volume(self, volume):
+        self.music_volume = max(0.0, min(1.0, volume))
+        pygame.mixer.music.set_volume(
+            self.music_volume if self.enabled else 0
         )
 
+    def set_effects_volume(self, volume):
+        self.effects_volume = max(0.0, min(1.0, volume))
+
+        for sound in self.effects.values():
+            sound.set_volume(
+                self.effects_volume if self.enabled else 0
+            )
+
     def stop_audio(self):
-        """Interrompe o áudio atual."""
-        winsound.PlaySound(None, 0)
+        pygame.mixer.music.set_volume(0)
+        pygame.mixer.stop()
 
     def set_enabled(self, enabled):
-        """Ativa ou desativa os efeitos sonoros."""
         self.enabled = enabled
 
-        if not enabled:
+        if enabled:
+            pygame.mixer.music.set_volume(self.music_volume)
+        else:
             self.stop_audio()
 
-
     def toggle_audio(self):
-        """Alterna entre áudio ligado e desligado."""
         self.set_enabled(not self.enabled)
         return self.enabled
