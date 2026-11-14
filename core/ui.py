@@ -23,6 +23,12 @@ WIDTH, HEIGHT = 900, 600
 
 MENU_X, MENU_Y, MENU_GAP = 650, 225, 65
 
+# Logo do jogo (substitui o título em texto). Se o arquivo não existir,
+# o título "ASTRA" em texto aparece no lugar.
+LOGO_IMAGE = IMAGES_DIR / "logo.png"
+LOGO_X, LOGO_Y = 245, 240        # centro da logo
+LOGO_MAX_W, LOGO_MAX_H = 580, 330  # tamanho máximo da logo
+
 TITLE_FONT = "Sunborn Sans One"
 TITLE_X, TITLE_Y = 250, 200
 TITLE_SIZE, SUBTITLE_SIZE = 80, 16
@@ -262,6 +268,11 @@ class TitleScreen(tk.Frame):
         self._draw_title()
 
     def _draw_title(self):
+        if LOGO_IMAGE.exists():
+            self.logo_img = fit_image(LOGO_IMAGE, LOGO_MAX_W, LOGO_MAX_H)
+            self.canvas.create_image(LOGO_X, LOGO_Y, image=self.logo_img)
+            return
+
         family = font_or_fallback(TITLE_FONT)
 
         lines = [
