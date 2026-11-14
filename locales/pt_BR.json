@@ -1,19 +1,23 @@
+
 {
   "ui": {
     "continue": "Continuar",
     "save": "Salvar jogo",
     "load": "Carregar jogo",
+    "saved": "Jogo salvo!",
     "chapter_end": "Fim do capítulo 1!",
     "challenge": "DESAFIO",
     "choose_language": "Escolha seu idioma",
-    "new_game": "Novo Jogo",
+    "new_game": "Novo jogo",
     "options": "Opções",
     "quit": "Sair",
+    "menu": "Menu principal",
     "back_to_menu": "Voltar ao menu",
-    "menu": "Menu",
-    "saved": "Jogo salvo!"
+    "sound_on": "Som: Ligado",
+    "sound_off": "Som: Desligado"
   },
   "chapter_01": {
+    "title": "Capítulo 1",
     "ada_01": "COSMO! Você viu a Vera?",
     "cosmo_01": "A última localização registrada foi no terminal de cargas.",
     "ada_02": "Terminal de cargas?! Ela não pode ter entrado naquela nave!",
