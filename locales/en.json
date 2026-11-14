@@ -1,19 +1,23 @@
+
 {
   "ui": {
     "continue": "Continue",
     "save": "Save Game",
     "load": "Load Game",
+    "saved": "Game saved!",
     "chapter_end": "End of Chapter 1!",
     "challenge": "CHALLENGE",
     "choose_language": "Choose your language",
     "new_game": "New Game",
     "options": "Options",
     "quit": "Quit",
-    "back_to_menu": "Back to menu",
-    "menu": "Menu",
-    "saved": "Game saved!"
+    "menu": "Main Menu",
+    "back_to_menu": "Back to Menu",
+    "sound_on": "Sound: ON",
+    "sound_off": "Sound: OFF"
   },
   "chapter_01": {
+    "title": "Chapter 1",
     "ada_01": "COSMO! Have you seen Vera?",
     "cosmo_01": "Her last recorded location was the cargo terminal.",
     "ada_02": "The cargo terminal?! She couldn't have boarded that ship!",

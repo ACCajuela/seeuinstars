@@ -3,6 +3,8 @@ import tkinter as tk
 import tkinter.font as tkfont
 from pathlib import Path
 
+from core.audio_manager import AudioManager
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 IMAGES_DIR = PROJECT_ROOT / "assets" / "images"
 FONTS_DIR = PROJECT_ROOT / "assets" / "fonts"
@@ -12,7 +14,7 @@ SAVE_FILE = PROJECT_ROOT / "save.json"  # mesmo caminho do SaveManager
 WIDTH, HEIGHT = 900, 600
 
 # Posição dos botões na home (centro do primeiro botão e espaço entre eles)
-MENU_X, MENU_Y, MENU_GAP = 650, 250, 72
+MENU_X, MENU_Y, MENU_GAP = 650, 225, 65
 
 # Título do jogo (centro do texto "ASTRA"; o subtítulo fica logo abaixo)
 TITLE_FONT = "Sunborn Sans One"
@@ -39,6 +41,8 @@ def load_project_fonts():
 def font_or_fallback(family, fallback="Arial"):
     """Usa a fonte pedida se ela existir; senão, usa a fonte reserva."""
     return family if family in tkfont.families() else fallback
+
+audio_manager = AudioManager()  # efeitos sonoros (clique, acerto, erro)
 
 # Paleta
 BG = "#101827"
@@ -103,7 +107,7 @@ class MenuButton:
         if enabled:
             canvas.tag_bind(tag, "<Enter>", lambda e: self._hover(True))
             canvas.tag_bind(tag, "<Leave>", lambda e: self._hover(False))
-            canvas.tag_bind(tag, "<Button-1>", lambda e: self.command())
+            canvas.tag_bind(tag, "<Button-1>", lambda e: self._click())
 
     def _paint(self, fill):
         border = BUTTON_BORDER if self.enabled else BUTTON_DISABLED
@@ -114,6 +118,12 @@ class MenuButton:
     def _hover(self, inside):
         self._paint(BUTTON_HOVER if inside else BUTTON_BG)
         self.canvas.configure(cursor="hand2" if inside else "")
+
+    def _click(self):
+        if not self.enabled:
+            return
+        audio_manager.play_effect("click.wav")
+        self.command()
 
     def destroy(self):
         self.canvas.delete(self.tag)
@@ -161,6 +171,16 @@ class HomeScreen(TitleScreen):
         MenuButton(self.canvas, x, y + gap, t("ui.continue"), on_continue, enabled=has_save)
         MenuButton(self.canvas, x, y + gap * 2, t("ui.options"), on_options)
         MenuButton(self.canvas, x, y + gap * 3, t("ui.quit"), on_quit)
+
+        # Liga/desliga o som (o texto muda conforme o estado)
+        def sound_text():
+            return t("ui.sound_on" if audio_manager.enabled else "ui.sound_off")
+
+        def toggle_sound():
+            audio_manager.toggle_audio()
+            self.canvas.itemconfigure(sound_button.label, text=sound_text())
+
+        sound_button = MenuButton(self.canvas, x, y + gap * 4, sound_text(), toggle_sound)
 
 
 class LanguageScreen(TitleScreen):
@@ -248,10 +268,10 @@ class DialogueScreen(tk.Frame):
         )
 
         # Salvar e voltar ao menu (canto superior direito)
-        MenuButton(c, 715, 32, t("ui.save"), self.save,
-                   width=110, height=36, font_size=12)
-        MenuButton(c, 835, 32, t("ui.menu"), on_end,
-                   width=110, height=36, font_size=12)
+        MenuButton(c, 653, 32, t("ui.save"), self.save,
+                   width=150, height=36, font_size=12)
+        MenuButton(c, 813, 32, t("ui.menu"), on_end,
+                   width=150, height=36, font_size=12)
 
         c.bind("<Button-1>", self._on_click)
         c.bind("<space>", lambda e: self.advance())
@@ -485,6 +505,7 @@ class DialogueScreen(tk.Frame):
 
     def _answer(self, puzzle_id, option_index):
         correct, message_key = self.engine.answer_puzzle(puzzle_id, option_index)
+        audio_manager.play_effect("correct.wav" if correct else "wrong.wav")
         self._set_feedback(self.t(message_key))
         if correct:
             self._clear_buttons()
