@@ -7,7 +7,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 IMAGES_DIR = PROJECT_ROOT / "assets" / "images"
 FONTS_DIR = PROJECT_ROOT / "assets" / "fonts"
 BACKGROUND_IMAGE = IMAGES_DIR / "fundo-home.png"
-SAVE_FILE = PROJECT_ROOT / "saves" / "save.json"
+SAVE_FILE = PROJECT_ROOT / "save.json"  # mesmo caminho do SaveManager
 
 WIDTH, HEIGHT = 900, 600
 
@@ -91,17 +91,15 @@ class MenuButton:
         self.canvas.configure(cursor="hand2" if inside else "")
 
 
-class HomeScreen(tk.Frame):
-    """Tela inicial: imagem de fundo com os botões do menu por cima."""
+class TitleScreen(tk.Frame):
+    """Base das telas de menu: imagem de fundo + título ASTRA."""
 
-    def __init__(self, master, on_new_game, on_continue, on_options, on_quit):
+    def __init__(self, master):
         super().__init__(master, bg=BG)
         self.canvas = tk.Canvas(self, width=WIDTH, height=HEIGHT, bg=BG, highlightthickness=0)
         self.canvas.pack(fill="both", expand=True)
-
         self._draw_background()
         self._draw_title()
-        self._draw_menu(on_new_game, on_continue, on_options, on_quit)
 
     def _draw_title(self):
         family = font_or_fallback(TITLE_FONT)
@@ -129,13 +127,33 @@ class HomeScreen(tk.Frame):
         self.background_img = img  # manter referência, senão a imagem some
         self.canvas.create_image(WIDTH // 2, HEIGHT // 2, image=img)
 
-    def _draw_menu(self, on_new_game, on_continue, on_options, on_quit):
+
+
+class HomeScreen(TitleScreen):
+    """Tela inicial: fundo, título e botões do menu. `t` traduz as chaves de texto."""
+
+    def __init__(self, master, t, on_new_game, on_continue, on_options, on_quit):
+        super().__init__(master)
         x, y, gap = MENU_X, MENU_Y, MENU_GAP
         has_save = SAVE_FILE.exists()
-        MenuButton(self.canvas, x, y, "Novo Jogo", on_new_game)
-        MenuButton(self.canvas, x, y + gap, "Continuar", on_continue, enabled=has_save)
-        MenuButton(self.canvas, x, y + gap * 2, "Opções", on_options)
-        MenuButton(self.canvas, x, y + gap * 3, "Sair", on_quit)
+        MenuButton(self.canvas, x, y, t("ui.new_game"), on_new_game)
+        MenuButton(self.canvas, x, y + gap, t("ui.continue"), on_continue, enabled=has_save)
+        MenuButton(self.canvas, x, y + gap * 2, t("ui.options"), on_options)
+        MenuButton(self.canvas, x, y + gap * 3, t("ui.quit"), on_quit)
+
+
+class LanguageScreen(TitleScreen):
+    """Escolha de idioma, com o mesmo visual da home."""
+
+    def __init__(self, master, on_choose):
+        super().__init__(master)
+        x, y = MENU_X, MENU_Y
+        self.canvas.create_text(
+            x, y - 60, text="Choose your language\nEscolha seu idioma",
+            font=("Arial", 14, "bold"), fill=TITLE, justify="center",
+        )
+        MenuButton(self.canvas, x, y + 20, "Português (Brasil)", lambda: on_choose("pt_BR"))
+        MenuButton(self.canvas, x, y + 20 + MENU_GAP, "English", lambda: on_choose("en"))
 
 
 def _flat_button(master, text, command):
@@ -147,11 +165,12 @@ def _flat_button(master, text, command):
 
 
 class DialogueScreen(tk.Frame):
-    """Tela de diálogo: mostra as falas do StoryEngine e os botões de escolha."""
+    """Tela de diálogo: falas do StoryEngine, escolhas e quebra-cabeças."""
 
-    def __init__(self, master, engine, on_end):
+    def __init__(self, master, engine, t, on_end):
         super().__init__(master, bg=BG)
         self.engine = engine
+        self.t = t
         self.on_end = on_end
 
         self.speaker = tk.Label(self, font=("Arial", 16, "bold"), fg=ACCENT, bg=BG)
@@ -164,31 +183,45 @@ class DialogueScreen(tk.Frame):
 
         self.choices_frame = tk.Frame(self, bg=BG)
         self.choices_frame.pack(pady=10)
-        self.next_button = _flat_button(self, "Continuar", self.next_dialogue)
+        self.feedback = tk.Label(
+            self, font=("Arial", 13), fg="#FFD166", bg=BG, wraplength=750,
+        )
+        self.feedback.pack(pady=10)
+        self.next_button = _flat_button(self, t("ui.continue"), self.next_dialogue)
 
         self.next_dialogue()
 
-    def next_dialogue(self):
+    def _clear_choices(self):
         for widget in self.choices_frame.winfo_children():
             widget.destroy()
 
+    def next_dialogue(self):
+        self._clear_choices()
+        self.feedback.config(text="")
+
         data = self.engine.next_dialogue()
 
+        # Fim do capítulo
         if data is None:
             self.speaker.config(text="")
-            self.text.config(text="Fim do capítulo 1!")
-            self.next_button.config(text="Voltar ao menu", command=self.on_end)
+            self.text.config(text=self.t("ui.chapter_end"))
+            self.next_button.config(text=self.t("ui.back_to_menu"), command=self.on_end)
             self.next_button.pack(pady=20)
             return
 
+        # Quebra-cabeça
+        if data.get("type") == "puzzle":
+            self.show_puzzle(data["id"])
+            return
+
         self.speaker.config(text=data["speaker"])
-        self.text.config(text=data["text"])
+        self.text.config(text=self.t(data["text_key"]))
 
         if "choices" in data:
             self.next_button.pack_forget()
             for choice in data["choices"]:
                 _flat_button(
-                    self.choices_frame, choice["text"],
+                    self.choices_frame, self.t(choice["text_key"]),
                     lambda choice_id=choice["id"]: self.select_choice(choice_id),
                 ).pack(pady=5)
         else:
@@ -197,3 +230,22 @@ class DialogueScreen(tk.Frame):
     def select_choice(self, choice_id):
         self.engine.make_choice(choice_id)
         self.next_dialogue()
+
+    def show_puzzle(self, puzzle_id):
+        puzzle = self.engine.get_puzzle(puzzle_id)
+        self.speaker.config(text=self.t("ui.challenge"))
+        self.text.config(text=self.t(puzzle["question_key"]))
+        self.next_button.pack_forget()
+
+        for index, option in enumerate(puzzle["options"]):
+            _flat_button(
+                self.choices_frame, self.t(option["text_key"]),
+                lambda i=index: self.answer_puzzle(puzzle_id, i),
+            ).pack(pady=5)
+
+    def answer_puzzle(self, puzzle_id, option_index):
+        correct, message_key = self.engine.answer_puzzle(puzzle_id, option_index)
+        self.feedback.config(text=self.t(message_key))
+        if correct:
+            self._clear_choices()
+            self.next_button.pack(pady=20)

@@ -1,8 +1,12 @@
 import tkinter as tk
-from tkinter import messagebox
 
 from core.engine import StoryEngine
-from core.ui import BG, HEIGHT, WIDTH, DialogueScreen, HomeScreen, load_project_fonts
+from core.localization_manager import LocalizationManager
+from core.save_manager import SaveManager
+from core.ui import (
+    BG, HEIGHT, WIDTH,
+    DialogueScreen, HomeScreen, LanguageScreen, load_project_fonts,
+)
 
 
 class App(tk.Tk):
@@ -13,8 +17,16 @@ class App(tk.Tk):
         self.geometry(f"{WIDTH}x{HEIGHT}")
         self.resizable(False, False)
         self.configure(bg=BG)
+
+        self.localization = LocalizationManager("en")
+        self.save_manager = SaveManager()
         self.current = None
-        self.show_home()
+
+        # Fluxo: escolha de idioma -> home -> jogo
+        self.show_language()
+
+    def t(self, key):
+        return self.localization.get(key)
 
     def _switch(self, screen):
         if self.current is not None:
@@ -22,23 +34,32 @@ class App(tk.Tk):
         self.current = screen
         self.current.pack(fill="both", expand=True)
 
+    def show_language(self):
+        self._switch(LanguageScreen(self, on_choose=self.choose_language))
+
+    def choose_language(self, language):
+        self.localization.set_language(language)
+        self.show_home()
+
     def show_home(self):
         self._switch(HomeScreen(
-            self,
+            self, self.t,
             on_new_game=self.new_game,
             on_continue=self.continue_game,
-            on_options=self.options,
+            on_options=self.show_language,
             on_quit=self.destroy,
         ))
 
+    def _start(self, engine):
+        self._switch(DialogueScreen(self, engine, self.t, on_end=self.show_home))
+
     def new_game(self):
-        self._switch(DialogueScreen(self, StoryEngine(), on_end=self.show_home))
+        self._start(StoryEngine())
 
     def continue_game(self):
-        messagebox.showinfo("Continuar", "Carregar jogo salvo: em breve!")
-
-    def options(self):
-        messagebox.showinfo("Opções", "Volume, idioma etc.: em breve!")
+        engine = StoryEngine()
+        if self.save_manager.load_game(engine):
+            self._start(engine)
 
 
 if __name__ == "__main__":

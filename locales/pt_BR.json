@@ -1,0 +1,43 @@
+{
+  "ui": {
+    "continue": "Continuar",
+    "save": "Salvar jogo",
+    "load": "Carregar jogo",
+    "chapter_end": "Fim do capítulo 1!",
+    "challenge": "DESAFIO",
+    "choose_language": "Escolha seu idioma",
+    "new_game": "Novo Jogo",
+    "options": "Opções",
+    "quit": "Sair",
+    "back_to_menu": "Voltar ao menu"
+  },
+  "chapter_01": {
+    "ada_01": "COSMO! Você viu a Vera?",
+    "cosmo_01": "A última localização registrada foi no terminal de cargas.",
+    "ada_02": "Terminal de cargas?! Ela não pode ter entrado naquela nave!",
+    "cosmo_02": "Detectei uma nave cargueira partindo há três minutos.",
+    "cosmo_03": "Ada, precisamos alcançar a nave da Vera! Por onde vamos?",
+    "choice_hangar": "Ir pelo hangar",
+    "choice_control": "Ir pela central de controle",
+    "hangar_ada": "Vamos pelo hangar! Deve existir alguma nave que consiga alcançar a Vera.",
+    "hangar_cosmo": "Boa ideia! Mas precisamos calcular quanto combustível será necessário para a viagem.",
+    "control_ada": "Vamos à central de controle. Talvez consigamos descobrir para onde a nave foi.",
+    "control_cosmo": "Encontrei as coordenadas! Precisamos interpretar os dados de navegação.",
+    "reunion_ada": "Pronto, COSMO! Agora sabemos como seguir a Vera.",
+    "reunion_cosmo": "Excelente trabalho, Ada! Nossa aventura está apenas começando."
+  },
+  "puzzles": {
+    "fuel_question": "Uma nave precisa de 5 unidades de combustível para cada trecho. Quantas unidades são necessárias para percorrer 3 trechos?",
+    "fuel_option_1": "10 unidades",
+    "fuel_option_2": "15 unidades",
+    "fuel_option_3": "20 unidades",
+    "fuel_success": "Muito bem! 5 × 3 = 15 unidades de combustível.",
+    "fuel_failure": "Quase! Multiplique o combustível necessário por trecho pela quantidade de trechos.",
+    "navigation_question": "COSMO encontrou três rotas. Qual delas leva a nave para o norte?",
+    "navigation_option_1": "A rota que aponta para cima no mapa",
+    "navigation_option_2": "A rota que aponta para baixo no mapa",
+    "navigation_option_3": "A rota que aponta para a direita no mapa",
+    "navigation_success": "Correto! Em um mapa convencional, o norte fica na parte superior.",
+    "navigation_failure": "Observe a orientação do mapa. Em mapas convencionais, o norte costuma aparecer na parte superior."
+  }
+}
