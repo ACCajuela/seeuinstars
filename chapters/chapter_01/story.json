@@ -21,6 +21,60 @@
         {
           "speaker": "COSMO",
           "text": "Detectei uma nave cargueira partindo há três minutos."
+        },
+        {
+          "speaker": "COSMO",
+          "text": "Ada, precisamos alcançar a nave da Vera! Por onde vamos?",
+          "choices": [
+            {
+              "text": "Ir pelo hangar",
+              "id": "hangar"
+            },
+            {
+              "text": "Ir pela central de controle",
+              "id": "controle"
+            }
+          ]
+        }
+      ]
+    },
+    "hangar": {
+      "dialogues": [
+        {
+          "speaker": "Ada",
+          "text": "Vamos pelo hangar! Deve existir alguma nave que consiga alcançar a Vera."
+        },
+        {
+          "speaker": "COSMO",
+          "text": "Boa ideia! Mas precisamos calcular quanto combustível será necessário para a viagem."
+        }
+      ],
+      "puzzle": "fuel_calculation",
+      "next_scene": "reuniao"
+    },
+    "controle": {
+      "dialogues": [
+        {
+          "speaker": "Ada",
+          "text": "Vamos à central de controle. Talvez consigamos descobrir para onde a nave foi."
+        },
+        {
+          "speaker": "COSMO",
+          "text": "Encontrei as coordenadas! Precisamos interpretar os dados de navegação."
+        }
+      ],
+      "puzzle": "navigation",
+      "next_scene": "reuniao"
+    },
+    "reuniao": {
+      "dialogues": [
+        {
+          "speaker": "Ada",
+          "text": "Pronto, COSMO! Agora sabemos como seguir a Vera."
+        },
+        {
+          "speaker": "COSMO",
+          "text": "Excelente trabalho, Ada! Nossa aventura está apenas começando."
         }
       ]
     }

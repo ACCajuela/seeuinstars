@@ -14,6 +14,7 @@ root.geometry("900x600")
 root.configure(bg="#101827")
 
 
+
 def next_dialogue():
     dialogue_data = engine.next_dialogue()
 
@@ -25,6 +26,30 @@ def next_dialogue():
 
     character_name.config(text=dialogue_data["speaker"])
     dialogue.config(text=dialogue_data["text"])
+
+    # Remove escolhas anteriores
+    for widget in choices_frame.winfo_children():
+        widget.destroy()
+
+    # Verifica se o diálogo possui escolhas
+    if "choices" in dialogue_data:
+        next_button.pack_forget()
+
+        for choice in dialogue_data["choices"]:
+            ttk.Button(
+                choices_frame,
+                text=choice["text"],
+                command=lambda choice_id=choice["id"]: select_choice(choice_id)
+            ).pack(pady=5)
+    else:
+        next_button.pack(pady=20)
+
+
+def select_choice(choice_id):
+    engine.make_choice(choice_id)
+    next_button.pack(pady=20)
+    next_dialogue()
+
 
 
 # Nome do personagem
@@ -48,6 +73,9 @@ dialogue = tk.Label(
     justify="center"
 )
 dialogue.pack(pady=20)
+
+choices_frame = tk.Frame(root, bg="#101827")
+choices_frame.pack(pady=10)
 
 # Botão de avançar
 next_button = ttk.Button(

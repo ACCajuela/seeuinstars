@@ -1,0 +1,24 @@
+
+{
+  "puzzles": {
+    "fuel_calculation": {
+      "question": "Uma nave precisa de 5 unidades de combustível para cada trecho. Quantas unidades são necessárias para percorrer 3 trechos?",
+      "options": [
+        {
+          "text": "10 unidades",
+          "correct": false
+        },
+        {
+          "text": "15 unidades",
+          "correct": true
+        },
+        {
+          "text": "20 unidades",
+          "correct": false
+        }
+      ],
+      "success": "Muito bem! 5 × 3 = 15 unidades de combustível.",
+      "failure": "Quase! Multiplique o combustível necessário por trecho pela quantidade de trechos."
+    }
+  }
+}
