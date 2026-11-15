@@ -30,154 +30,128 @@ class MarsGravityUI(tk.Frame):
         "pt_BR": {
             "title": "GRAVIDADE MARCIANA",
             "chapter": "CAPÍTULO 02 — CHEGADA A MARTE",
-            "objective": "Ajude Ada a atravessar o terreno e alcançar o rover.",
+            "objective": "Ajude a Ada a pular pelas pedras até chegar ao rover.",
             "gravity": "Gravidade",
             "earth": "Terra",
             "mars": "Marte",
-            "jump_force": "Velocidade inicial do salto",
+            "jump_force": "Força do pulo",
             "jump_value": "{value:.1f} m/s",
             "instructions": (
-                "Ajuste a velocidade do salto e use A/D ou "
-                "as setas para se movimentar."
+                "Escolha a força do pulo. Use A e D ou as setas para andar."
             ),
-            "jump": "SALTAR",
+            "jump": "PULAR",
             "reset": "REINICIAR",
             "back": "VOLTAR",
-            "hint": "PEDIR DICA AO COSMO",
-            "hint_title": "COSMO — APOIO CIENTÍFICO",
-            "status_title": "STATUS DA MISSÃO",
+            "hint": "DICA DO COSMO",
+            "hint_title": "COSMO — DICAS",
+            "status_title": "COMO ESTÁ A MISSÃO",
             "status_ready": "Encontre um caminho até o rover.",
-            "status_air": "Ada está no ar.",
-            "status_ground": "Ada está em uma superfície segura.",
-            "status_fall": "Ada caiu! Retornando ao último ponto seguro.",
-            "status_success": "Rover alcançado! Missão concluída.",
-            "success": "MISSÃO CONCLUÍDA",
-            "success_detail": "Ada conseguiu alcançar o rover.",
+            "status_air": "A Ada está no ar!",
+            "status_ground": "A Ada está num lugar seguro.",
+            "status_fall": "A Ada caiu! Voltando para o último lugar seguro.",
+            "status_success": "Chegamos ao rover! Missão cumprida.",
+            "success": "MISSÃO CUMPRIDA",
+            "success_detail": "A Ada chegou ao rover!",
             "continue": "CONTINUAR",
             "distance": "Distância até o rover: {value:.0f} m",
-            "velocity": "Velocidade vertical: {value:.1f} m/s",
-            "height": "Altura do salto: {value:.1f} m",
-            "checkpoint": "Ponto seguro alcançado!",
+            "velocity": "Velocidade para cima: {value:.1f} m/s",
+            "height": "Altura do pulo: {value:.1f} m",
+            "checkpoint": "Lugar seguro!",
             "rover": "ROVER",
             "ada": "ADA",
             "platform": "PLATAFORMA",
             "hint_1": (
-                "Em Marte, a aceleração gravitacional é de "
-                "aproximadamente 3,71 m/s². Na Terra, é 9,81 m/s²."
+                "Em Marte, a gravidade puxa menos: só um pouco mais de um terço da gravidade da Terra."
             ),
             "hint_2": (
-                "A massa de Ada não muda, mas seu peso é menor "
-                "em Marte, porque a gravidade é mais fraca."
+                "A Ada não muda nada. Ela só fica mais leve porque Marte puxa menos."
             ),
             "hint_3": (
-                "A altura máxima de um salto vertical ideal é "
-                "h = v² / (2g), em que v é a velocidade inicial "
-                "e g é a aceleração gravitacional."
+                "Com a mesma força, você pula mais de 2 vezes e meia mais alto em Marte do que na Terra!"
             ),
             "hint_4": (
-                "Aumente a velocidade inicial para alcançar "
-                "plataformas mais altas. Controle também o "
-                "movimento horizontal para não ultrapassá-las."
+                "Pule mais forte para chegar às pedras altas. E cuidado ao andar para não passar do ponto!"
             ),
-            "all_hints": "TODAS AS DICAS EXIBIDAS",
+            "all_hints": "VOCÊ JÁ VIU TODAS AS DICAS",
             "cosmo_ready": (
-                "COSMO: Precisamos alcançar o rover. "
-                "A gravidade de Marte permitirá saltos mais altos "
-                "com a mesma velocidade inicial."
+                "COSMO: Vamos chegar até o rover! Em Marte, você pula bem mais alto com a mesma força."
             ),
             "cosmo_air": (
-                "COSMO: Observe sua trajetória. A gravidade "
-                "reduz sua velocidade vertical durante a subida "
-                "e acelera a descida."
+                "COSMO: Olha o seu pulo! A gravidade vai te freando na subida e te puxando de volta na descida."
             ),
             "cosmo_success": (
-                "COSMO: Excelente, Ada! Você utilizou as condições "
-                "gravitacionais de Marte para alcançar o módulo."
+                "COSMO: Muito bem, Ada! Você usou a gravidade fraca de Marte para chegar ao rover."
             ),
             "cosmo_fall": (
-                "COSMO: A trajetória não foi suficiente. "
-                "Podemos ajustar a velocidade inicial e tentar novamente."
+                "COSMO: Não deu dessa vez. Vamos mudar a força do pulo e tentar de novo!"
             ),
-            "comparison": "Comparação gravitacional",
-            "weight": "Peso relativo em Marte: aproximadamente 38%",
-            "trajectory": "TRAJETÓRIA PREVISTA",
-            "legend": "Linha tracejada: salto ideal sem movimento horizontal",
+            "comparison": "Gravidade: Terra x Marte",
+            "weight": "Em Marte, você pesa só 38% do seu peso na Terra",
+            "trajectory": "CAMINHO DO PULO",
+            "legend": "Linha tracejada: pulo reto para cima, sem andar",
         },
         "en": {
             "title": "MARTIAN GRAVITY",
             "chapter": "CHAPTER 02 — ARRIVAL AT MARS",
-            "objective": "Help Ada cross the terrain and reach the rover.",
+            "objective": "Help Ada jump across the rocks to reach the rover.",
             "gravity": "Gravity",
             "earth": "Earth",
             "mars": "Mars",
-            "jump_force": "Initial jump velocity",
+            "jump_force": "Jump power",
             "jump_value": "{value:.1f} m/s",
             "instructions": (
-                "Adjust the jump velocity and use A/D "
-                "or the arrow keys to move."
+                "Pick how hard to jump. Use A and D or the arrow keys to walk."
             ),
             "jump": "JUMP",
             "reset": "RESET",
             "back": "BACK",
-            "hint": "ASK COSMO FOR A HINT",
-            "hint_title": "COSMO — SCIENCE SUPPORT",
+            "hint": "COSMO'S HINT",
+            "hint_title": "COSMO — TIPS",
             "status_title": "MISSION STATUS",
             "status_ready": "Find a path to the rover.",
-            "status_air": "Ada is airborne.",
-            "status_ground": "Ada is on a safe surface.",
-            "status_fall": "Ada fell! Returning to the last safe position.",
-            "status_success": "Rover reached! Mission complete.",
+            "status_air": "Ada is in the air!",
+            "status_ground": "Ada is on a safe spot.",
+            "status_fall": "Ada fell! Going back to the last safe spot.",
+            "status_success": "We reached the rover! Mission complete.",
             "success": "MISSION COMPLETE",
-            "success_detail": "Ada successfully reached the rover.",
+            "success_detail": "Ada made it to the rover!",
             "continue": "CONTINUE",
             "distance": "Distance to rover: {value:.0f} m",
-            "velocity": "Vertical velocity: {value:.1f} m/s",
+            "velocity": "Upward speed: {value:.1f} m/s",
             "height": "Jump height: {value:.1f} m",
-            "checkpoint": "Safe checkpoint reached!",
+            "checkpoint": "Safe spot reached!",
             "rover": "ROVER",
             "ada": "ADA",
             "platform": "PLATFORM",
             "hint_1": (
-                "On Mars, gravitational acceleration is "
-                "approximately 3.71 m/s². On Earth, it is 9.81 m/s²."
+                "On Mars, gravity pulls less: just over a third of Earth's gravity."
             ),
             "hint_2": (
-                "Ada's mass remains unchanged, but her weight "
-                "is lower on Mars because gravity is weaker."
+                "Ada doesn't change at all. She just feels lighter because Mars pulls less."
             ),
             "hint_3": (
-                "The maximum height of an ideal vertical jump is "
-                "h = v² / (2g), where v is initial velocity "
-                "and g is gravitational acceleration."
+                "With the same push, you jump more than 2.5 times higher on Mars than on Earth!"
             ),
             "hint_4": (
-                "Increase the initial velocity to reach higher "
-                "platforms. Control horizontal movement so "
-                "you do not overshoot them."
+                "Jump harder to reach the tall rocks. And be careful when walking so you don't overshoot!"
             ),
-            "all_hints": "ALL HINTS REVEALED",
+            "all_hints": "YOU'VE SEEN ALL THE TIPS",
             "cosmo_ready": (
-                "COSMO: We must reach the rover. "
-                "Martian gravity allows higher jumps "
-                "with the same initial velocity."
+                "COSMO: Let's reach the rover! On Mars, you jump much higher with the same push."
             ),
             "cosmo_air": (
-                "COSMO: Observe your trajectory. Gravity "
-                "reduces vertical velocity during ascent "
-                "and accelerates the descent."
+                "COSMO: Look at your jump! Gravity slows you down on the way up and pulls you back on the way down."
             ),
             "cosmo_success": (
-                "COSMO: Excellent, Ada! You used the gravitational "
-                "conditions on Mars to reach the module."
+                "COSMO: Great job, Ada! You used Mars's weak gravity to reach the rover."
             ),
             "cosmo_fall": (
-                "COSMO: That trajectory was insufficient. "
-                "We can adjust the initial velocity and try again."
+                "COSMO: Not this time. Let's change how hard you jump and try again!"
             ),
-            "comparison": "Gravity comparison",
-            "weight": "Relative weight on Mars: approximately 38%",
-            "trajectory": "PREDICTED TRAJECTORY",
-            "legend": "Dashed line: ideal jump without horizontal movement",
+            "comparison": "Gravity: Earth vs Mars",
+            "weight": "On Mars, you weigh only 38% of your Earth weight",
+            "trajectory": "JUMP PATH",
+            "legend": "Dashed line: jumping straight up, without walking",
         },
     }
 

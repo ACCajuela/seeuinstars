@@ -107,8 +107,8 @@ class QuizScreen(tk.Frame):
         self.title_label = tk.Label(
             self.header,
             text=self.ui_text(
-                "Knowledge Assessment",
-                "Avaliação de Conhecimentos"
+                "Astronaut Practice Test",
+                "Simulado de Astronauta"
             ),
             font=(FONT, 21, "bold"),
             fg=TEXT,
@@ -397,8 +397,8 @@ class QuizScreen(tk.Frame):
         if self.result_visible:
             self.progress_label.configure(
                 text=self.ui_text(
-                    "Assessment completed",
-                    "Avaliação concluída"
+                    "Practice test finished",
+                    "Simulado concluído"
                 )
             )
 
@@ -410,7 +410,7 @@ class QuizScreen(tk.Frame):
             self.progress_label.configure(
                 text=self.ui_text(
                     f"Question {display_number} of {total}",
-                    f"Questão {display_number} de {total}"
+                    f"Pergunta {display_number} de {total}"
                 )
             )
 
@@ -515,8 +515,8 @@ class QuizScreen(tk.Frame):
 
         self.action_button.configure(
             text=self.ui_text(
-                "Submit Answer",
-                "Confirmar Resposta"
+                "Check answer",
+                "Conferir resposta"
             ),
             state="disabled",
             command=self.handle_action
@@ -615,8 +615,8 @@ class QuizScreen(tk.Frame):
 
         else:
             prefix = self.ui_text(
-                "Not quite!",
-                "Não foi dessa vez!"
+                "Almost!",
+                "Quase!"
             )
 
             color = ERROR
@@ -633,12 +633,12 @@ class QuizScreen(tk.Frame):
         if self.quiz.finished:
             action_text = self.ui_text(
                 "View Results",
-                "Ver Resultado"
+                "Ver resultado"
             )
         else:
             action_text = self.ui_text(
-                "Next Question",
-                "Próxima Questão"
+                "Next question",
+                "Próxima pergunta"
             )
 
         self.action_button.configure(
@@ -669,8 +669,8 @@ class QuizScreen(tk.Frame):
 
         self.question_label.configure(
             text=self.ui_text(
-                "Assessment Complete!",
-                "Avaliação Concluída!"
+                "Practice test finished!",
+                "Simulado concluído!"
             )
         )
 
@@ -703,16 +703,16 @@ class QuizScreen(tk.Frame):
 
         if result["passed"]:
             message = self.ui_text(
-                "Great work, Ada! You passed the assessment.",
-                "Muito bem, Ada! Você passou na avaliação."
+                "Great job, Ada! You passed the practice test.",
+                "Muito bem, Ada! Você passou no simulado."
             )
 
             color = SUCCESS
 
         else:
             message = self.ui_text(
-                "Keep learning, Ada. Every mistake is an opportunity to improve.",
-                "Continue aprendendo, Ada. Cada erro é uma oportunidade de melhorar."
+                "Keep going, Ada! Every mistake helps you learn something new.",
+                "Continue, Ada! Cada erro ajuda você a aprender algo novo."
             )
 
             color = MUTED
@@ -724,8 +724,8 @@ class QuizScreen(tk.Frame):
 
         self.action_button.configure(
             text=self.ui_text(
-                "Continue Story",
-                "Continuar História"
+                "Continue the story",
+                "Continuar a história"
             ),
             state="normal",
             command=self.finish

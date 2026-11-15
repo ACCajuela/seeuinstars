@@ -1,151 +1,150 @@
-
 {
   "title_key": "chapter_00.quiz_title",
   "passing_score": 3,
   "questions": [
     {
       "question": {
-        "en": "Why do astronauts aboard the International Space Station appear to float?",
-        "pt_BR": "Por que os astronautas a bordo da Estação Espacial Internacional parecem flutuar?"
+        "en": "Why do astronauts float inside the Space Station?",
+        "pt_BR": "Por que os astronautas flutuam dentro da Estação Espacial?"
       },
       "options": [
         {
-          "en": "There is no gravity in space.",
-          "pt_BR": "Não existe gravidade no espaço."
+          "en": "Because there is no gravity in space.",
+          "pt_BR": "Porque não existe gravidade no espaço."
         },
         {
-          "en": "They are in continuous free fall around Earth.",
-          "pt_BR": "Eles estão em queda livre contínua ao redor da Terra."
+          "en": "Because they are always falling around Earth, together with the station.",
+          "pt_BR": "Porque eles estão sempre caindo em volta da Terra, junto com a estação."
         },
         {
-          "en": "The station generates an anti-gravity field.",
-          "pt_BR": "A estação gera um campo antigravitacional."
+          "en": "Because the station has a machine that turns gravity off.",
+          "pt_BR": "Porque a estação tem uma máquina que desliga a gravidade."
         },
         {
-          "en": "Earth's atmosphere pushes them upward.",
-          "pt_BR": "A atmosfera terrestre os empurra para cima."
+          "en": "Because Earth's air pushes them up.",
+          "pt_BR": "Porque o ar da Terra empurra eles para cima."
         }
       ],
       "correct_index": 1,
       "explanation": {
-        "en": "The station and its astronauts are continuously falling around Earth together. This is called orbital free fall.",
-        "pt_BR": "A estação e seus astronautas estão continuamente caindo ao redor da Terra. Isso é chamado de queda livre orbital."
+        "en": "There is gravity up there! The station and the astronauts are falling around Earth together, nonstop. That's why they float.",
+        "pt_BR": "Lá em cima tem gravidade, sim! A estação e os astronautas estão caindo juntos em volta da Terra, sem parar. Por isso eles flutuam."
       }
     },
     {
       "question": {
-        "en": "What causes the seasons on Earth?",
-        "pt_BR": "O que provoca as estações do ano na Terra?"
+        "en": "Why do we have seasons (summer, fall, winter, and spring)?",
+        "pt_BR": "Por que existem as estações do ano (verão, outono, inverno e primavera)?"
       },
       "options": [
         {
-          "en": "Changes in Earth's distance from the Sun.",
-          "pt_BR": "Mudanças na distância entre a Terra e o Sol."
+          "en": "Because Earth gets closer to and farther from the Sun.",
+          "pt_BR": "Porque a Terra fica mais perto ou mais longe do Sol."
         },
         {
-          "en": "The Moon's gravitational pull.",
-          "pt_BR": "A atração gravitacional da Lua."
+          "en": "Because of the Moon.",
+          "pt_BR": "Por causa da Lua."
         },
         {
-          "en": "The tilt of Earth's rotational axis.",
-          "pt_BR": "A inclinação do eixo de rotação da Terra."
+          "en": "Because Earth is tilted.",
+          "pt_BR": "Porque a Terra é inclinada."
         },
         {
-          "en": "Changes in the Sun's temperature.",
-          "pt_BR": "Mudanças na temperatura do Sol."
+          "en": "Because the Sun gets hotter and colder.",
+          "pt_BR": "Porque o Sol esquenta e esfria."
         }
       ],
       "correct_index": 2,
       "explanation": {
-        "en": "Earth's axial tilt changes the angle and duration of sunlight throughout the year.",
-        "pt_BR": "A inclinação do eixo terrestre altera o ângulo de incidência e a duração da luz solar ao longo do ano."
+        "en": "Earth spins a little tilted. So, during the year, each part of Earth gets more or less sunlight.",
+        "pt_BR": "A Terra gira meio inclinada. Por isso, durante o ano, cada parte dela recebe mais ou menos luz do Sol."
       }
     },
     {
       "question": {
-        "en": "Why is Mars especially challenging for human explorers?",
-        "pt_BR": "Por que Marte representa um desafio tão grande para exploradores humanos?"
+        "en": "Why is it so hard to live on Mars?",
+        "pt_BR": "Por que é tão difícil morar em Marte?"
       },
       "options": [
         {
           "en": "Mars has no gravity.",
-          "pt_BR": "Marte não possui gravidade."
+          "pt_BR": "Marte não tem gravidade."
         },
         {
-          "en": "Mars has a thin atmosphere and extreme environmental conditions.",
-          "pt_BR": "Marte possui uma atmosfera rarefeita e condições ambientais extremas."
+          "en": "The air is very thin, it's very cold, and there is a lot of radiation from the Sun.",
+          "pt_BR": "O ar é muito fininho, faz muito frio e chega muita radiação do Sol."
         },
         {
           "en": "Mars is hotter than Venus.",
           "pt_BR": "Marte é mais quente que Vênus."
         },
         {
-          "en": "Mars has no solid surface.",
-          "pt_BR": "Marte não possui superfície sólida."
+          "en": "Mars has no solid ground.",
+          "pt_BR": "Marte não tem chão firme."
         }
       ],
       "correct_index": 1,
       "explanation": {
-        "en": "Mars has a very thin atmosphere, low temperatures and significant radiation hazards.",
-        "pt_BR": "Marte possui uma atmosfera muito rarefeita, baixas temperaturas e riscos significativos associados à radiação."
+        "en": "On Mars you can't breathe the air, it's freezing, and there's a lot of radiation: invisible energy from the Sun that can hurt the body. That's why astronauts need special shelters and suits.",
+        "pt_BR": "Em Marte não dá para respirar o ar, faz muito frio e chega muita radiação: uma energia invisível do Sol que pode fazer mal ao corpo. Por isso, os astronautas precisam de abrigos e roupas especiais."
       }
     },
     {
       "question": {
-        "en": "What happens to the gravitational force between two objects when their distance doubles?",
-        "pt_BR": "O que acontece com a força gravitacional entre dois objetos quando a distância entre eles dobra?"
+        "en": "The farther you are from a planet, its gravity...",
+        "pt_BR": "Quanto mais longe você fica de um planeta, a gravidade dele..."
       },
       "options": [
         {
-          "en": "It doubles.",
-          "pt_BR": "Ela dobra."
+          "en": "gets stronger.",
+          "pt_BR": "fica mais forte."
         },
         {
-          "en": "It stays the same.",
-          "pt_BR": "Ela permanece igual."
+          "en": "gets weaker.",
+          "pt_BR": "fica mais fraca."
         },
         {
-          "en": "It becomes four times stronger.",
-          "pt_BR": "Ela fica quatro vezes mais forte."
+          "en": "stays the same.",
+          "pt_BR": "continua igual."
         },
         {
-          "en": "It becomes one quarter as strong.",
-          "pt_BR": "Ela passa a ter um quarto da intensidade."
+          "en": "disappears right away.",
+          "pt_BR": "some na hora."
         }
       ],
-      "correct_index": 3,
+      "correct_index": 1,
       "explanation": {
-        "en": "Gravitational force follows the inverse-square law. Doubling the distance reduces the force to one quarter.",
-        "pt_BR": "A força gravitacional segue a lei do inverso do quadrado. Dobrar a distância reduz a força a um quarto."
+        "en": "The farther away you are, the weaker the pull. If the distance doubles, the pull gets 4 times weaker!",
+        "pt_BR": "Quanto mais longe, mais fraco é o puxão. Se a distância dobrar, o puxão fica 4 vezes mais fraco!"
       }
     },
     {
       "question": {
-        "en": "Why does a spacecraft need a heat shield when returning to Earth?",
-        "pt_BR": "Por que uma espaçonave precisa de um escudo térmico ao retornar à Terra?"
+        "en": "Why does a spaceship need a heat shield to come back to Earth?",
+        "pt_BR": "Por que uma nave precisa de um escudo de calor para voltar à Terra?"
       },
       "options": [
         {
-          "en": "To protect against intense heating during atmospheric entry.",
-          "pt_BR": "Para proteger contra o aquecimento intenso durante a entrada na atmosfera."
+          "en": "So it doesn't burn up when it hits Earth's air, which heats the ship a lot.",
+          "pt_BR": "Para não queimar quando entra no ar da Terra, que esquenta muito a nave."
         },
         {
-          "en": "To prevent gravity from affecting the spacecraft.",
-          "pt_BR": "Para impedir que a gravidade afete a espaçonave."
+          "en": "So gravity doesn't pull the ship.",
+          "pt_BR": "Para a gravidade não puxar a nave."
         },
         {
-          "en": "To increase the spacecraft's speed.",
-          "pt_BR": "Para aumentar a velocidade da espaçonave."
+          "en": "To make the ship go faster.",
+          "pt_BR": "Para a nave ir mais rápido."
         },
         {
-          "en": "To generate oxygen for the crew.",
-          "pt_BR": "Para produzir oxigênio para a tripulação."
+          "en": "To make oxygen for the astronauts.",
+          "pt_BR": "Para fazer oxigênio para os astronautas."
         }
       ],
       "correct_index": 0,
       "explanation": {
-        "en": "Atmospheric entry produces intense heating as the spacecraft transfers energy to the surrounding air.",
-        "pt_BR": "A entrada atmosférica produz aquecimento intenso à medida que a espaçonave transfere energia para o ar ao seu redor."
+        "en": "The ship comes back super fast. When it rushes through the air, it gets very hot, like when you rub your hands together really hard. The shield protects the ship and the people inside.",
+        "pt_BR": "A nave volta muito, muito rápido. Ao passar pelo ar, ela esquenta demais, como quando você esfrega as mãos bem forte. O escudo protege a nave e quem está dentro."
       }
     }
   ]
