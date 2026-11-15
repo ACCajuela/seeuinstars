@@ -577,6 +577,11 @@ CHARACTERS = {
         "image": "Cosmo.png",
         "side": "right",
         "color": "#8BD3FF"
+    },
+    "Vera": {
+        "image": "Vera.png",
+        "side": "right",
+        "color": "#C084FC"
     }
 }
 

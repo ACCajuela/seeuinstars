@@ -8,6 +8,12 @@ from pathlib import Path
 
 import pygame
 
+from core.ui import IMAGES_DIR, TITLE_FONT, font_or_fallback
+
+# Foto da Terra usada no "pálido ponto azul" (PNG com fundo transparente).
+# Sem o arquivo, a Terra é desenhada com círculos.
+EARTH_IMAGE = IMAGES_DIR / "terra.png"
+
 
 class IntroScreen(tk.Frame):
     WIDTH = 900
@@ -77,7 +83,11 @@ class IntroScreen(tk.Frame):
 
         self.language = self.load_language()
         self.subtitles = self.load_subtitles()
+        self.ui_texts = {}
         self.translations = self.load_translations()
+
+        # Foto da Terra em vários tamanhos (para o zoom da animação)
+        self.earth_frames = self.load_earth_frames()
 
         print(f"[INTRO] Language: {self.language}")
         print(f"[INTRO] Subtitle cues: {len(self.subtitles)}")
@@ -296,6 +306,9 @@ class IntroScreen(tk.Frame):
                 {}
             )
 
+            # Textos da tela (nome do jogo e botão de pular)
+            self.ui_texts = data.get("ui", {})
+
             return translations
 
         except (
@@ -307,6 +320,65 @@ class IntroScreen(tk.Frame):
                 f"[INTRO] Translation error: {error}"
             )
             return {}
+
+    def ui_text(self, key, fallback):
+        return self.ui_texts.get(key, fallback)
+
+    # =====================================
+    # EARTH IMAGE
+    # =====================================
+
+    # Tamanho da Terra no começo (o ponto) e no fim da aproximação
+    EARTH_MIN_RADIUS = 3
+    EARTH_MAX_RADIUS = 148
+
+    def load_earth_frames(self):
+        """Prepara a foto da Terra em todos os tamanhos que o zoom usa.
+
+        O Tkinter só reduz imagens por números inteiros, então criamos
+        uma versão para cada redução e escolhemos a mais próxima do
+        tamanho pedido a cada quadro. Devolve uma lista de
+        (imagem, centro_x, centro_y, raio), do menor para o maior."""
+        if not EARTH_IMAGE.exists():
+            print(f"[INTRO] Earth image not found: {EARTH_IMAGE}")
+            return {}
+
+        base = tk.PhotoImage(file=str(EARTH_IMAGE))
+
+        # Acha o planeta dentro da imagem (ignora o fundo transparente)
+        step = 16
+        xs, ys = [], []
+        for y in range(0, base.height(), step):
+            for x in range(0, base.width(), step):
+                if not base.transparency_get(x, y):
+                    xs.append(x)
+                    ys.append(y)
+
+        if not xs:
+            return {}
+
+        x0, y0 = min(xs), min(ys)
+        x1, y1 = max(xs) + step, max(ys) + step
+        diameter = max(x1 - x0, y1 - y0)
+        center_x, center_y = (x0 + x1) / 2, (y0 + y1) / 2
+
+        frames = {}
+        for radius in range(self.EARTH_MIN_RADIUS, self.EARTH_MAX_RADIUS + 1):
+            factor = max(1, round(diameter / (radius * 2)))
+            if factor in frames:
+                continue
+            frames[factor] = (
+                base.subsample(factor),
+                center_x / factor,
+                center_y / factor,
+                diameter / factor / 2,  # raio real do planeta nesta versão
+            )
+
+        # Organiza por raio, para achar rápido a versão mais próxima
+        return sorted(frames.values(), key=lambda frame: frame[3])
+
+    def earth_frame_for(self, radius):
+        return min(self.earth_frames, key=lambda frame: abs(frame[3] - radius))
 
     # =====================================
     # AUDIO
@@ -468,7 +540,10 @@ class IntroScreen(tk.Frame):
             (t - 60) / 125
         )
 
-        radius = 3 + 145 * zoom
+        radius = (
+            self.EARTH_MIN_RADIUS
+            + (self.EARTH_MAX_RADIUS - self.EARTH_MIN_RADIUS) * zoom
+        )
 
         x = 455
         y = 310
@@ -493,7 +568,18 @@ class IntroScreen(tk.Frame):
             width=2
         )
 
-        # Planeta
+        # Planeta: foto da Terra, depois que o ponto terminou de aparecer
+        if self.earth_frames and appearance >= 0.99:
+            image, cx, cy, _ = self.earth_frame_for(radius)
+            self.canvas.create_image(
+                x - cx,
+                y - cy,
+                image=image,
+                anchor="nw"
+            )
+            return
+
+        # Sem imagem (ou enquanto o ponto ainda está surgindo): círculo
         self.canvas.create_oval(
             x - radius,
             y - radius,
@@ -503,9 +589,8 @@ class IntroScreen(tk.Frame):
             outline=""
         )
 
-        # Continentes abstratos.
-        # A Bri substituirá pela arte final.
-        if radius > 30:
+        # Continentes simples (só quando não há a foto da Terra)
+        if radius > 30 and not self.earth_frames:
             self.canvas.create_oval(
                 x - radius * 0.5,
                 y - radius * 0.3,
@@ -617,7 +702,7 @@ class IntroScreen(tk.Frame):
             450,
             280,
             text="ASTRA",
-            font=("Arial", 54, "bold"),
+            font=(font_or_fallback(TITLE_FONT), 64),
             fill=self.blend(
                 background,
                 "#FFFFFF",
@@ -628,8 +713,11 @@ class IntroScreen(tk.Frame):
         self.canvas.create_text(
             450,
             335,
-            text="A JOURNEY BEYOND EARTH",
-            font=("Arial", 14),
+            text=self.ui_text(
+                "game_subtitle",
+                "A JOURNEY BEYOND EARTH"
+            ),
+            font=(font_or_fallback(TITLE_FONT), 16),
             fill=self.blend(
                 background,
                 "#A9C9ED",
@@ -667,7 +755,7 @@ class IntroScreen(tk.Frame):
         self.canvas.create_text(
             870,
             28,
-            text="SKIP INTRO >>",
+            text=self.ui_text("skip_intro", "SKIP INTRO >>"),
             anchor="e",
             fill="#8EA4C3",
             font=("Arial", 10, "bold")
