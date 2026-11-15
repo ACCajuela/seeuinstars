@@ -23,6 +23,7 @@ from screens.story_dialogue import StoryDialogueScreen
 from puzzles.quiz_screen import QuizScreen
 from puzzles.knowledge_quiz import KnowledgeQuiz
 from puzzles.orbital_launch_ui import OrbitalLaunchUI
+from puzzles.mars_gravity_ui import MarsGravityUI
 
 
 class App(tk.Tk):
@@ -227,9 +228,20 @@ class App(tk.Tk):
             )
             return
 
+        if puzzle_type == "mars_gravity":
+            self.open_mars_gravity(
+                engine,
+                puzzle_id
+            )
+            return
+
         raise ValueError(
             f"Unsupported standalone puzzle: {puzzle_id}"
         )
+
+    # ========================================================
+    # KNOWLEDGE QUIZ
+    # ========================================================
 
     def open_knowledge_quiz(self, engine, puzzle_id):
         print("[GAME] Opening knowledge assessment.")
@@ -249,6 +261,10 @@ class App(tk.Tk):
 
         self._switch(screen)
 
+    # ========================================================
+    # ORBITAL LAUNCH
+    # ========================================================
+
     def open_orbital_launch(self, engine, puzzle_id):
         print("[GAME] Opening orbital launch.")
 
@@ -267,6 +283,33 @@ class App(tk.Tk):
         )
 
         self._switch(screen)
+
+    # ========================================================
+    # MARS GRAVITY — CHAPTER 02
+    # ========================================================
+
+    def open_mars_gravity(self, engine, puzzle_id):
+        print("[GAME] Opening Mars gravity puzzle.")
+
+        screen = MarsGravityUI(
+            self,
+            language=self.current_language(),
+            on_complete=lambda: self.finish_puzzle(
+                engine,
+                puzzle_id,
+                {
+                    "completed": True,
+                    "status": "rover_reached"
+                }
+            ),
+            on_back=lambda: self.return_from_puzzle(engine)
+        )
+
+        self._switch(screen)
+
+    # ========================================================
+    # RETURN FROM PUZZLE
+    # ========================================================
 
     def return_from_puzzle(self, engine):
         print("[GAME] Returning to story from puzzle.")

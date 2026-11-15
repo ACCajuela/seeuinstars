@@ -1,0 +1,344 @@
+
+{
+  "chapter": 2,
+  "title_key": "chapter_02.title",
+  "start_scene": "mars_approach",
+  "scenes": {
+    "mars_approach": {
+      "dialogues": [
+        {
+          "speaker": "Narrator",
+          "text_key": "chapter_02.narrator_01"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_01"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_02.ada_01"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_02"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_02.ada_02"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_03"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_02.ada_03"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_04"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_02.ada_04"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_05"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_02.ada_05"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_06"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_02.ada_06"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_07"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_02.ada_07"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_08"
+        }
+      ],
+      "next_scene": "mars_descent"
+    },
+    "mars_descent": {
+      "dialogues": [
+        {
+          "speaker": "Narrator",
+          "text_key": "chapter_02.narrator_02"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_09"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_02.ada_08"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_10"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_02.ada_09"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_11"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_02.ada_10"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_12"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_02.ada_11"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_13"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_02.ada_12"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_14"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_02.ada_13"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_15"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_02.ada_14"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_16"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_02.ada_15"
+        }
+      ],
+      "puzzle": "mars_gravity",
+      "next_scene": "rover_interception"
+    },
+    "rover_interception": {
+      "dialogues": [
+        {
+          "speaker": "Narrator",
+          "text_key": "chapter_02.narrator_03"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_17"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_02.ada_16"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_02.ada_17"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_18"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_02.ada_18"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_19"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_02.ada_19"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_20"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_02.ada_20"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_21"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_02.ada_21"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_22"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_02.ada_22"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_23"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_02.ada_23"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_24"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_02.ada_24"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_25"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_02.ada_25"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_26"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_02.ada_26"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_02.ada_27"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_27"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_02.ada_28"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_28"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_02.ada_29"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_29"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_02.ada_30"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_30"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_31"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_02.ada_31"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_02.ada_32"
+        }
+      ],
+      "next_scene": "leaving_mars"
+    },
+    "leaving_mars": {
+      "dialogues": [
+        {
+          "speaker": "Narrator",
+          "text_key": "chapter_02.narrator_04"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_02.ada_33"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_32"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_02.ada_34"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_33"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_02.ada_35"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_34"
+        },
+        {
+          "speaker": "Narrator",
+          "text_key": "chapter_02.narrator_05"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_35"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_02.ada_36"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_36"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_02.ada_37"
+        },
+        {
+          "speaker": "Narrator",
+          "text_key": "chapter_02.narrator_06"
+        }
+      ]
+    }
+  }
+}
