@@ -2,3 +2,7 @@ __pycache__/
 *.pyc
 saves/
 save.json
+
+# PyInstaller
+build/
+dist/

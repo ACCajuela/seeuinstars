@@ -2,13 +2,15 @@
 import json
 from pathlib import Path
 
+from core.paths import SETTINGS_FILE
+
 
 class LocalizationManager:
     def __init__(self, language="en"):
         self.project_root = Path(__file__).resolve().parent.parent
 
         self.locales_path = self.project_root / "locales"
-        self.settings_file = self.project_root / "settings.json"
+        self.settings_file = SETTINGS_FILE  # veja core/paths.py
 
         self.language = None
         self.translations = {}
