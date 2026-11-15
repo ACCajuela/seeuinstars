@@ -91,7 +91,27 @@ ACTIONS = {
         "cost": 1,
         "effects": {},  # a resposta chega dias depois (veja resolve_day)
     },
+    # --- Só na superfície de Marte (Noite em Marte) ---
+    "heat_battery": {
+        "cost": 2,
+        "effects": {},  # protege a bateria do frio (veja resolve_day)
+    },
+    "clean_panels": {
+        "cost": 0,
+        "effects": {"oxygen": -1},  # sair com o traje gasta oxigênio
+    },
+    "rover_data": {
+        "cost": 1,
+        "effects": {"science": +1},
+    },
 }
+
+# Quanto de energia a bateria perde numa noite gelada sem aquecedor
+COLD_BATTERY_LOSS = 3
+
+# Cartas que aparecem em cada trecho (por padrão, as da viagem)
+TRAVEL_ACTIONS = ["make_oxygen", "build_shelter", "boost_engines",
+                  "research", "call_earth"]
 
 # Gravidade das tempestades solares: quanta dose de radiação elas dão
 # se a nave estiver sem blindagem. Usa a classe real das explosões
@@ -121,6 +141,25 @@ LEGS = {
         # onde a nave está em cada dia (a energia solar cai perto de Marte)
         "path": ["earth", "earth", "mars"],
         "storm_chance": [0.0, 1.0, 0.4],
+    },
+    # Posto avançado: uma noite na superfície de Marte, ao lado do rover,
+    # durante uma tempestade de poeira (como a que parou o Opportunity).
+    "mars_night": {
+        "days": 2,
+        "location": "mars",
+        "path": ["mars", "mars"],
+        "storm_chance": [0.0, 0.0],
+        "actions": ["heat_battery", "clean_panels", "make_oxygen",
+                    "call_earth", "rover_data"],
+        # dust: a poeira cobre os painéis | cold: a noite congela a bateria
+        "conditions": [
+            {"dust": True, "cold": True},
+            {"dust": True, "cold": True},
+        ],
+        # nomes das partes da noite (em vez de "Dia 1 de 2")
+        "phases": ["phase_evening", "phase_midnight"],
+        "trip_icon": "🌙",
+        "research_cards": "research_cards_mars",
     },
 }
 
@@ -213,11 +252,12 @@ class MissionState:
     def can_afford(self, actions):
         return self.actions_cost(actions) <= self.energy
 
-    def resolve_day(self, actions, storm=None):
+    def resolve_day(self, actions, storm=None, conditions=None):
         """Aplica as ações escolhidas e passa a noite.
 
-        actions: lista de ids de ACTIONS (ex.: ["make_oxygen", "research"])
-        storm:   None ou {"class": "M", ...} (evento do DONKI)
+        actions:    lista de ids de ACTIONS (ex.: ["make_oxygen", "research"])
+        storm:      None ou {"class": "M", ...} (evento do DONKI)
+        conditions: None ou {"dust": True, "cold": True} (Noite em Marte)
 
         Devolve uma lista de itens do relatório do dia:
             {"key": "...", "tone": "good"|"bad"|"info", "params": {...}}
@@ -225,18 +265,27 @@ class MissionState:
         if not self.can_afford(actions):
             raise ValueError("Not enough energy for these actions")
 
+        conditions = conditions or {}
         report = []
         self.day += 1
 
-        # 1) Painéis solares (ou bateria nuclear) recarregam a bateria
+        # 1) Painéis solares (ou bateria nuclear) recarregam a bateria.
+        #    Na tempestade de poeira, painel sujo não gera nada.
         income = self.energy_income()
+        dusty = conditions.get("dust") and "clean_panels" not in actions
+        if dusty:
+            income = 0
+            report.append({"key": "dust_no_power", "tone": "bad",
+                           "params": {}})
+        else:
+            report.append({
+                "key": "rtg_income"
+                if self.rtg_online and income > self.solar_income()
+                else "solar_income",
+                "tone": "info",
+                "params": {"value": income},
+            })
         self.energy = _clamp(self.energy + income, 0, MAX_ENERGY)
-        report.append({
-            "key": "rtg_income" if self.rtg_online and income > self.solar_income()
-            else "solar_income",
-            "tone": "info",
-            "params": {"value": income},
-        })
 
         # 2) Ações escolhidas
         self.energy -= self.actions_cost(actions)
@@ -253,6 +302,17 @@ class MissionState:
         self.oxygen -= self.crew
         report.append({"key": "oxygen_used", "tone": "info",
                        "params": {"value": self.crew}})
+
+        # 3b) Noite gelada: sem aquecedor, a bateria perde carga
+        if conditions.get("cold"):
+            if "heat_battery" in actions:
+                report.append({"key": "battery_warm", "tone": "good",
+                               "params": {}})
+            else:
+                lost = min(self.energy, COLD_BATTERY_LOSS)
+                self.energy -= lost
+                report.append({"key": "cold_battery", "tone": "bad",
+                               "params": {"value": lost}})
 
         # 4) Tempestade solar
         if storm:

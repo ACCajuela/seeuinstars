@@ -14,7 +14,7 @@ import random
 import tkinter as tk
 
 from core.mission import (
-    ACTIONS, LEGS, MAX_DOSE, MAX_ENERGY, MAX_OXYGEN,
+    ACTIONS, LEGS, MAX_DOSE, MAX_ENERGY, MAX_OXYGEN, TRAVEL_ACTIONS,
     load_donki_events, pick_storm,
 )
 from core.ui import (
@@ -44,11 +44,11 @@ ICONS = {
     "boost_engines": "🚀",
     "research": "🔬",
     "call_earth": "📡",
+    "heat_battery": "🌡",
+    "clean_panels": "🧹",
+    "rover_data": "🤖",
 }
 
-# Ordem das cartas na tela
-CARD_ORDER = ["make_oxygen", "build_shelter", "boost_engines",
-              "research", "call_earth"]
 
 # Qual explicação do "Por quê?" combina com cada item do relatório
 WHY_FOR_REPORT = {
@@ -63,6 +63,12 @@ WHY_FOR_REPORT = {
     "storm_hit": "why_storm",
     "storm_blocked": "why_shelter",
     "emergency_dose": "why_storm",
+    "dust_no_power": "why_dust",
+    "action_clean_panels": "why_cleaning",
+    "action_heat_battery": "why_cold",
+    "battery_warm": "why_cold",
+    "cold_battery": "why_cold",
+    "action_rover_data": "why_rover",
 }
 
 TONE_COLORS = {"good": MINIGAME_SUCCESS, "bad": BAD_COLOR, "info": MINIGAME_MUTED}
@@ -88,6 +94,7 @@ class MissionLogScreen(tk.Frame):
 
         self.storms, self.storm_source = load_donki_events(PROJECT_ROOT)
         self.cards_text = self._research_cards()
+        self.actions = self.leg.get("actions", TRAVEL_ACTIONS)
 
         # Começa o trecho (ou continua, se o jogo foi salvo no meio dele)
         if self.mission.leg != leg_id or self.mission.leg_finished():
@@ -118,8 +125,17 @@ class MissionLogScreen(tk.Frame):
         text = self.t(f"mission.{key}")
         return text.format(**params) if params else text
 
+    def tx_leg(self, key, **params):
+        """Texto próprio do trecho (ex.: mission.mars_night_trip),
+        ou o texto padrão se o trecho não tiver um."""
+        specific = self.t(f"mission.{self.leg_id}_{key}")
+        if isinstance(specific, str) and not specific.startswith("["):
+            return specific.format(**params) if params else specific
+        return self.tx(key, **params)
+
     def _research_cards(self):
-        cards = self.t("mission.research_cards")
+        key = self.leg.get("research_cards", "research_cards")
+        cards = self.t(f"mission.{key}")
         return cards if isinstance(cards, list) else []
 
     def _format_date(self, iso_date):
@@ -157,7 +173,11 @@ class MissionLogScreen(tk.Frame):
         self.redraw()
 
     def end_day(self):
-        self.report = self.mission.resolve_day(self.selected, storm=self.storm)
+        index = self.mission.day
+        conditions = self.leg.get("conditions")
+        today = conditions[min(index, len(conditions) - 1)] if conditions else None
+        self.report = self.mission.resolve_day(self.selected, storm=self.storm,
+                                               conditions=today)
         # Carta de ciência sorteada para cada pesquisa feita hoje
         self.new_cards = [self.rng.choice(self.cards_text)
                           for a in self.selected if a == "research"
@@ -230,6 +250,12 @@ class MissionLogScreen(tk.Frame):
         self.buttons.append(button)
         return button
 
+    def _day_label(self, day):
+        phases = self.leg.get("phases")
+        if phases:
+            return self.tx(phases[min(day, len(phases)) - 1])
+        return self.tx("day", day=day, total=self.leg["days"])
+
     def _draw_header(self):
         family = font_or_fallback(TITLE_FONT)
         self._text(26, 28, anchor="w", text=self.tx("title"),
@@ -240,10 +266,11 @@ class MissionLogScreen(tk.Frame):
         day = min(self.mission.day + (1 if self.mode == "plan" else 0),
                   self.leg["days"])
         self._text(WIDTH - 26, 40, anchor="e",
-                   text=self.tx("day", day=day, total=self.leg["days"]),
+                   text=self._day_label(day),
                    font=(family, 18), fill=TITLE)
-        self._text(WIDTH - 26, 66, anchor="e", text=self.tx("source"),
-                   font=("Arial", 8), fill="#7C8BA5")
+        if any(self.leg.get("storm_chance", [])):
+            self._text(WIDTH - 26, 66, anchor="e", text=self.tx("source"),
+                       font=("Arial", 8), fill="#7C8BA5")
 
     def _draw_gauges(self):
         m = self.mission
@@ -264,14 +291,15 @@ class MissionLogScreen(tk.Frame):
         # Viagem: dias que faltam
         rounded_rect(self.canvas, x, 86, x + 206, 176, r=14, fill=BOX_FILL,
                      outline=TRIP_COLOR, width=2, tags="ui")
-        self._text(x + 16, 108, anchor="w", text=ICONS["trip"],
+        self._text(x + 16, 108, anchor="w",
+                   text=self.leg.get("trip_icon", ICONS["trip"]),
                    font=ICON_FONT, fill=TRIP_COLOR)
-        self._text(x + 50, 108, anchor="w", text=self.tx("trip"),
+        self._text(x + 50, 108, anchor="w", text=self.tx_leg("trip"),
                    font=("Arial", 12, "bold"), fill=TITLE)
         left = m.days_left
-        label = (self.tx("arrived") if left <= 0 else
-                 self.tx("days_left_one") if left == 1 else
-                 self.tx("days_left", value=left))
+        label = (self.tx_leg("arrived") if left <= 0 else
+                 self.tx_leg("days_left_one") if left == 1 else
+                 self.tx_leg("days_left", value=left))
         self._text(x + 16, 140, anchor="w", text=label,
                    font=("Arial", 13, "bold"), fill=TRIP_COLOR)
         total = self.leg["days"]
@@ -312,7 +340,7 @@ class MissionLogScreen(tk.Frame):
                    font=("Arial", 12, "bold"), fill=TITLE)
         card_w, card_h, gap = 160, 210, 12
         x = 26
-        for action in CARD_ORDER:
+        for action in self.actions:
             self._card(x, 218, card_w, card_h, action)
             x += card_w + gap
 
@@ -360,6 +388,9 @@ class MissionLogScreen(tk.Frame):
         if self.storm:
             message = self.tx("forecast_storm", cls=self.storm["class"])
             color = FEEDBACK_COLOR
+        elif self.leg.get("phases"):
+            message = self.tx_leg(f"forecast_{self.mission.day}")
+            color = FEEDBACK_COLOR
         elif self.mission.day == 0 and self.leg_id == "travel_earth_mars":
             message, color = self.tx("forecast_first"), TITLE
         else:
@@ -383,7 +414,8 @@ class MissionLogScreen(tk.Frame):
                    font=(font_or_fallback(TITLE_FONT), 17), fill=TITLE)
 
     def _draw_report(self):
-        self._panel(self.tx("report_title", day=self.mission.day))
+        self._panel(self.tx_leg("report_title", day=self.mission.day,
+                                phase=self._day_label(self.mission.day).lower()))
         y = 258
         for item in self.report:
             text = self.tx(f"report_{item['key']}", **{
@@ -421,7 +453,7 @@ class MissionLogScreen(tk.Frame):
         last = self.mission.leg_finished()
         self._button(330, 552, self.tx("why"), self.show_why,
                      width=180, height=44, font_size=12)
-        self._button(570, 552, self.tx("arrive" if last else "next_day"),
+        self._button(570, 552, self.tx_leg("arrive" if last else "next_day"),
                      self.after_report, width=200, height=44, font_size=12,
                      primary=True)
 
@@ -456,10 +488,10 @@ class MissionLogScreen(tk.Frame):
     # ---------------- Fim da viagem ----------------
 
     def _draw_summary(self):
-        self._panel(self.tx("summary_title"))
+        self._panel(self.tx_leg("summary_title"))
         m = self.mission
         self._text(450, 300, width=640, justify="center",
-                   text=self.tx("summary", energy=m.energy, oxygen=m.oxygen,
+                   text=self.tx_leg("summary", energy=m.energy, oxygen=m.oxygen,
                                 dose=m.dose, science=m.science),
                    font=("Arial", 14), fill=TITLE)
         self._button(450, 552, self.tx("arrive"), self.finish,

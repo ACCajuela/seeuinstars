@@ -775,6 +775,8 @@ class DialogueScreen(tk.Frame):
         return IMAGES_DIR / name if name else DIALOGUE_BACKGROUND
 
     def _update_background(self):
+        self._update_props()
+
         path = self._background_for_scene()
 
         if path == self.background_path:
@@ -794,6 +796,44 @@ class DialogueScreen(tk.Frame):
             self.background_item,
             image=self.background_img or ""
         )
+
+    def _update_props(self):
+        """Objetos no cenário da cena (campo "props" no story.json), por
+        cima do fundo e atrás dos personagens. Exemplo:
+            "props": [{"image": "hover.png", "x": 735, "y": 412, "width": 230}]
+        x, y: onde fica a base do objeto (o chão) | width: largura do desenho"""
+        scene = self.engine.scene or {}
+        props = scene.get("props", [])
+        signature = repr(props)
+
+        if signature == getattr(self, "_props_signature", None):
+            return
+
+        self._props_signature = signature
+        self.canvas.delete("prop")
+        self._prop_images = []
+        cache = self.__dict__.setdefault("_prop_cache", {})
+
+        for prop in props:
+            path = IMAGES_DIR / prop["image"]
+            if not path.exists():
+                continue
+            key = (prop["image"], prop.get("width", 200))
+            if key not in cache:
+                cache[key] = fit_content(path, prop.get("width", 200))
+            img, (x0, y0, x1, y1) = cache[key]
+            self._prop_images.append(img)
+            # base do desenho em (x, y), centralizado na horizontal
+            self.canvas.create_image(
+                prop["x"] - (x0 + x1) / 2,
+                prop["y"] - y1,
+                image=img,
+                anchor="nw",
+                tags="prop"
+            )
+
+        # logo acima do fundo, abaixo dos personagens e da caixa
+        self.canvas.tag_raise("prop", self.background_item)
 
     def _present(self, speaker, text, after_typing=None):
         self.state = "busy"

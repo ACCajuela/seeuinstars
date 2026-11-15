@@ -249,7 +249,13 @@
     "ada_34": "Então ele vai se divertir mais do que eu.",
     "ada_35": "Era uma piada, COSMO.",
     "ada_36": "E a gente consegue alcançar?",
-    "ada_37": "Então vamos achar outro caminho."
+    "ada_37": "Então vamos achar outro caminho.",
+    "cosmo_37": "Ada, más notícias: uma tempestade de poeira está chegando. Com tanta poeira, não dá para decolar com segurança.",
+    "ada_38": "Então vamos ter que passar a noite aqui?",
+    "cosmo_38": "Sim, ao lado do rover. Vamos montar um pequeno acampamento: um posto avançado em Marte.",
+    "cosmo_39": "Cuidado: a poeira vai cobrir os painéis solares, e a noite aqui pode passar de 80 graus negativos.",
+    "ada_39": "Acampar em Marte... Isso sim é uma aventura. Vamos cuidar bem da energia.",
+    "narrator_07": "O sol nasce. A tempestade de poeira passou, e o céu de Marte fica cor de caramelo outra vez."
   },
   "mission": {
     "title": "DIÁRIO DE BORDO",
@@ -316,6 +322,41 @@
       "No espaço, a coluna se estica, e os astronautas ficam até 3% mais altos! Quando voltam para a Terra, eles encolhem de novo. (NASA)",
       "A Estação Espacial dá uma volta na Terra a cada 90 minutos. Os astronautas veem cerca de 16 nasceres do sol por dia! (NASA)",
       "Um dia em Marte dura quase 24 horas e 40 minutos. Os cientistas chamam o dia marciano de \"sol\". (NASA)"
-    ]
+    ],
+    "route_mars_night": "Noite em Marte: tempestade de poeira",
+    "phase_evening": "FIM DA TARDE",
+    "phase_midnight": "MADRUGADA",
+    "mars_night_trip": "Amanhecer",
+    "mars_night_days_left": "Faltam {value} partes da noite",
+    "mars_night_days_left_one": "Falta só a madrugada",
+    "mars_night_arrived": "O sol nasceu!",
+    "mars_night_summary_title": "Amanheceu em Marte!",
+    "mars_night_summary": "Sobrevivemos à noite com {energy} de energia, {oxygen} de oxigênio e {dose} de radiação. Cartas de ciência: {science}.",
+    "mars_night_forecast_0": "COSMO: A poeira está cobrindo os painéis solares, e a noite vai ser gelada. Sem aquecedor, a bateria perde carga!",
+    "mars_night_forecast_1": "COSMO: É madrugada, a parte mais fria da noite. A tempestade de poeira continua.",
+    "action_heat_battery_name": "Aquecer a bateria",
+    "action_heat_battery_desc": "Protege a bateria do frio da noite.",
+    "action_clean_panels_name": "Limpar os painéis",
+    "action_clean_panels_desc": "A Ada sai com o traje e tira a poeira. Gasta 1 de oxigênio.",
+    "action_rover_data_name": "Analisar o rover",
+    "action_rover_data_desc": "Ganha uma carta de ciência sobre Marte.",
+    "report_dust_no_power": "A poeira cobriu os painéis: eles não geraram energia.",
+    "report_action_heat_battery": "O aquecedor manteve a bateria quentinha.",
+    "report_action_clean_panels": "A Ada limpou os painéis com o traje (gastou 1 de oxigênio).",
+    "report_action_rover_data": "Lemos os dados científicos do rover!",
+    "report_battery_warm": "A bateria aguentou o frio da noite.",
+    "report_cold_battery": "Sem aquecedor, o frio fez a bateria perder {value} de energia.",
+    "why_dust": "Em 2018, uma tempestade de poeira cobriu Marte inteiro e escureceu o céu. Sem luz nos painéis solares, o rover Opportunity ficou sem energia e parou de funcionar. (NASA)",
+    "why_cold": "As noites em Marte podem passar de 80 graus negativos. Baterias perdem carga no frio. Por isso, os rovers gastam energia com aquecedores só para continuarem funcionando.",
+    "why_cleaning": "Os rovers dependiam do vento para tirar a poeira dos painéis. Astronautas poderão limpar com as próprias mãos, mas sair da nave gasta o oxigênio do traje.",
+    "why_rover": "Os rovers são laboratórios sobre rodas: eles analisam pedras, solo e ar de Marte e mandam os resultados para a Terra.",
+    "research_cards_mars": [
+      "Marte é vermelho por causa da ferrugem: o chão tem muito óxido de ferro. (NASA)",
+      "O maior vulcão do Sistema Solar fica em Marte: o Monte Olimpo, cerca de 2 vezes e meia mais alto que o Monte Everest. (NASA)",
+      "O rover Perseverance carrega um aparelho chamado MOXIE, que conseguiu fazer oxigênio a partir do ar de Marte! (NASA)",
+      "O ar de Marte é muito fininho e quase todo feito de gás carbônico. Por isso, não dá para respirar lá sem traje. (NASA)"
+    ],
+    "mars_night_report_title": "Como foi o {phase}",
+    "mars_night_next_day": "SEGUIR NOITE ADENTRO"
   }
 }

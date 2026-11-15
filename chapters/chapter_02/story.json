@@ -149,6 +149,14 @@
     },
     "rover_interception": {
       "background": "fundo-home.png",
+      "props": [
+        {
+          "image": "hover.png",
+          "x": 735,
+          "y": 412,
+          "width": 230
+        }
+      ],
       "dialogues": [
         {
           "speaker": "Narrator",
@@ -283,11 +291,58 @@
           "text_key": "chapter_02.ada_32"
         }
       ],
+      "next_scene": "mars_night"
+    },
+    "mars_night": {
+      "background": "fundo-home.png",
+      "props": [
+        {
+          "image": "hover.png",
+          "x": 735,
+          "y": 412,
+          "width": 230
+        }
+      ],
+      "dialogues": [
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_37"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_02.ada_38"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_38"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_39"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_02.ada_39"
+        }
+      ],
+      "puzzle": "mars_night",
       "next_scene": "leaving_mars"
     },
     "leaving_mars": {
       "background": "fundo-home.png",
+      "props": [
+        {
+          "image": "hover.png",
+          "x": 735,
+          "y": 412,
+          "width": 230
+        }
+      ],
       "dialogues": [
+        {
+          "speaker": "Narrator",
+          "text_key": "chapter_02.narrator_07"
+        },
         {
           "speaker": "Narrator",
           "text_key": "chapter_02.narrator_04"

@@ -249,7 +249,13 @@
     "ada_34": "Then it'll have more fun than me.",
     "ada_35": "That was a joke, COSMO.",
     "ada_36": "And can we catch it?",
-    "ada_37": "Then we'll find another way."
+    "ada_37": "Then we'll find another way.",
+    "cosmo_37": "Ada, bad news: a dust storm is coming. With this much dust, it isn't safe to take off.",
+    "ada_38": "So we have to spend the night here?",
+    "cosmo_38": "Yes, next to the rover. We'll set up a small camp: an outpost on Mars.",
+    "cosmo_39": "Careful: the dust will cover the solar panels, and the night here can get colder than minus 80 degrees.",
+    "ada_39": "Camping on Mars... Now that's an adventure. Let's take good care of our energy.",
+    "narrator_07": "The sun rises. The dust storm has passed, and the Martian sky turns butterscotch again."
   },
   "mission": {
     "title": "SHIP'S LOG",
@@ -316,6 +322,41 @@
       "In space, the spine stretches, and astronauts get up to 3% taller! When they come back to Earth, they shrink again. (NASA)",
       "The Space Station goes around Earth every 90 minutes. Astronauts see about 16 sunrises a day! (NASA)",
       "A day on Mars lasts almost 24 hours and 40 minutes. Scientists call a Martian day a \"sol\". (NASA)"
-    ]
+    ],
+    "route_mars_night": "Night on Mars: dust storm",
+    "phase_evening": "LATE AFTERNOON",
+    "phase_midnight": "MIDDLE OF THE NIGHT",
+    "mars_night_trip": "Sunrise",
+    "mars_night_days_left": "{value} parts of the night left",
+    "mars_night_days_left_one": "Only the late night left",
+    "mars_night_arrived": "The sun is up!",
+    "mars_night_summary_title": "Morning on Mars!",
+    "mars_night_summary": "We survived the night with {energy} energy, {oxygen} oxygen, and {dose} radiation. Science cards: {science}.",
+    "mars_night_forecast_0": "COSMO: Dust is covering the solar panels, and the night will be freezing. Without a heater, the battery loses charge!",
+    "mars_night_forecast_1": "COSMO: It's the middle of the night, the coldest part. The dust storm keeps going.",
+    "action_heat_battery_name": "Heat the battery",
+    "action_heat_battery_desc": "Protects the battery from the night cold.",
+    "action_clean_panels_name": "Clean the panels",
+    "action_clean_panels_desc": "Ada goes outside in her suit to wipe the dust. Uses 1 oxygen.",
+    "action_rover_data_name": "Study the rover",
+    "action_rover_data_desc": "Get a science card about Mars.",
+    "report_dust_no_power": "Dust covered the panels: they made no energy.",
+    "report_action_heat_battery": "The heater kept the battery warm.",
+    "report_action_clean_panels": "Ada cleaned the panels in her suit (used 1 oxygen).",
+    "report_action_rover_data": "We read the rover's science data!",
+    "report_battery_warm": "The battery made it through the cold night.",
+    "report_cold_battery": "Without a heater, the cold made the battery lose {value} energy.",
+    "why_dust": "In 2018, a dust storm covered all of Mars and darkened the sky. With no light on its solar panels, the Opportunity rover ran out of power and stopped working. (NASA)",
+    "why_cold": "Nights on Mars can get colder than minus 80 degrees Celsius. Batteries lose charge in the cold. That's why rovers use energy for heaters just to keep working.",
+    "why_cleaning": "Rovers depended on the wind to blow the dust off their panels. Astronauts will be able to clean them by hand, but going outside uses the oxygen in their suit.",
+    "why_rover": "Rovers are labs on wheels: they study the rocks, soil, and air of Mars and send the results back to Earth.",
+    "research_cards_mars": [
+      "Mars is red because of rust: its ground has a lot of iron oxide. (NASA)",
+      "The biggest volcano in the Solar System is on Mars: Olympus Mons, about two and a half times taller than Mount Everest. (NASA)",
+      "The Perseverance rover carries a device called MOXIE, which made oxygen out of the Martian air! (NASA)",
+      "The air on Mars is very thin and almost all carbon dioxide. That's why you can't breathe there without a suit. (NASA)"
+    ],
+    "mars_night_report_title": "Report: {phase}",
+    "mars_night_next_day": "INTO THE NIGHT"
   }
 }
