@@ -50,234 +50,153 @@ ORBIT_COLOR = "#8BD3FF"
 TRANSLATIONS = {
     "en": {
         "chapter": "CHAPTER 1 — THE WRONG SHIP",
-        "subtitle": "Find the correct orbital velocity.",
+        "subtitle": "Find the right speed to go around Earth.",
         "panel": "ORBITAL\nLAUNCH",
-        "initial_velocity": "Initial velocity",
+        "initial_velocity": "Speed",
         "launch": "LAUNCH",
         "hint": "COSMO HINT",
         "reset": "RESET",
         "back": "BACK",
-        "altitude": "Altitude",
+        "altitude": "Height",
         "time": "Time",
-        "circular_speed": "Circular speed",
+        "circular_speed": "Orbit speed",
         "escape_speed": "Escape speed",
 
         "intro": (
-            "Ada, we need a stable orbit around Earth. "
-            "Choose a tangential velocity and launch."
+            "Ada, let's go around Earth without falling. Pick a speed and launch the ship!"
         ),
         "hint_running": (
-            "The simulation is running. Watch the path: "
-            "does the spacecraft curve around Earth, "
-            "fall toward it, or move away?"
+            "Watch the ship's path: does it go around Earth, fall down, or fly away?"
         ),
         "hint_completed": (
-            "Excellent work, Ada! Gravity continuously "
-            "changes the direction of our velocity. "
-            "That's why an orbit is a continuous fall "
-            "around Earth rather than a fall into it."
+            "Great job, Ada! Gravity pulls the ship all the time, but it moves sideways so fast that it never reaches the ground. That's an orbit: falling around Earth nonstop!"
         ),
         "hint_1": (
-            "Gravity pulls the spacecraft toward Earth. "
-            "A sideways velocity makes it move forward "
-            "while gravity bends its path."
+            "Gravity pulls the ship toward Earth. If the ship goes fast sideways, it keeps moving forward while gravity bends its path into a curve."
         ),
         "hint_2": (
-            "Too little speed makes the orbit dip toward "
-            "Earth. Too much speed can produce a very "
-            "stretched orbit or even an escape trajectory."
+            "Too slow, and the ship falls. Too fast, and it makes a stretched-out loop or even flies away from Earth."
         ),
         "hint_3": (
-            "Look at the circular speed displayed on "
-            "the panel. It is calculated from Earth's "
-            "gravity and our starting distance."
+            "Look at the 'orbit speed' on the panel. It's just the right speed to go around at this height."
         ),
         "hint_4": (
-            "At 400 km altitude, circular speed is "
-            "approximately {speed} km/s. "
-            "Try setting the slider near that value."
+            "At this height (400 km), the orbit speed is about {speed} km/s. Set the slider close to that number."
         ),
         "collision": (
-            "Our sideways velocity was too low. "
-            "Gravity pulled the spacecraft into Earth. "
-            "Try increasing the initial velocity."
+            "We were too slow. Gravity pulled the ship back down to Earth. Try a higher speed."
         ),
         "escape": (
-            "We exceeded the local escape speed. "
-            "The spacecraft has enough energy to "
-            "leave Earth's gravitational orbit. "
-            "Try reducing the velocity."
+            "We were too fast! The ship got so much speed that it escaped Earth's gravity. Try a lower speed."
         ),
         "elliptical_low": (
-            "The spacecraft remained gravitationally "
-            "bound, but its orbit dips too close to "
-            "Earth. Increase the initial velocity "
-            "toward circular speed."
+            "Almost! The ship went around, but it came too close to Earth. Speed up a little."
         ),
         "elliptical_high": (
-            "The spacecraft is in an elongated orbit. "
-            "We launched faster than circular speed. "
-            "Try reducing the velocity slightly."
+            "Almost! The loop got stretched because we were a bit too fast. Slow down a little."
         ),
         "elliptical_other": (
-            "The orbit is not circular enough. "
-            "Try adjusting the velocity in smaller steps."
+            "The loop isn't round enough yet. Try changing the speed in small steps."
         ),
         "stable_orbit": (
-            "Orbital insertion successful! The spacecraft "
-            "moves sideways fast enough for gravity to "
-            "curve its path around Earth. "
-            "We have achieved a stable orbit!"
+            "We did it! The ship moves sideways so fast that gravity just makes it go around Earth. We're in orbit!"
         ),
         "simulation_complete": (
-            "Simulation complete. Let's review "
-            "the initial velocity and try again."
+            "Test over. Let's adjust the speed and try again."
         ),
         "velocity_escape": (
-            "That velocity is at or above escape speed. "
-            "The spacecraft may leave Earth's orbit."
+            "That speed is too high: the ship might escape from Earth."
         ),
         "velocity_low": (
-            "That is quite slow for this altitude. "
-            "Gravity may pull the spacecraft into Earth."
+            "That speed is too low: the ship might fall."
         ),
         "velocity_high": (
-            "That is faster than circular speed. "
-            "Expect a more elongated orbit."
+            "That speed is a bit high: the loop might get stretched."
         ),
         "velocity_near": (
-            "This velocity is closer to the circular "
-            "orbit range. Launch and observe the path."
+            "That speed looks good! Launch and see what happens."
         ),
         "launch_started": (
-            "Launch initiated. Observe how Earth's gravity "
-            "changes the spacecraft's trajectory."
+            "Launch! Watch how Earth's gravity bends the ship's path."
         ),
         "simulation_reset": (
-            "Simulation reset. Adjust the initial velocity "
-            "and launch again. You can ask me for a hint."
+            "All set again. Pick a speed and launch. You can ask me for a hint!"
         ),
     },
 
     "pt_BR": {
         "chapter": "CAPÍTULO 1 — A NAVE ERRADA",
-        "subtitle": "Encontre a velocidade orbital correta.",
+        "subtitle": "Encontre a velocidade certa para dar voltas na Terra.",
         "panel": "LANÇAMENTO\nORBITAL",
-        "initial_velocity": "Velocidade inicial",
+        "initial_velocity": "Velocidade",
         "launch": "LANÇAR",
         "hint": "DICA DO COSMO",
         "reset": "REINICIAR",
         "back": "VOLTAR",
-        "altitude": "Altitude",
+        "altitude": "Altura",
         "time": "Tempo",
-        "circular_speed": "Velocidade circular",
-        "escape_speed": "Velocidade de escape",
+        "circular_speed": "Velocidade da órbita",
+        "escape_speed": "Velocidade de fuga",
 
         "intro": (
-            "Ada, precisamos estabelecer uma órbita estável "
-            "ao redor da Terra. Escolha uma velocidade "
-            "tangencial e inicie o lançamento."
+            "Ada, vamos girar ao redor da Terra sem cair. Escolha a velocidade e lance a nave!"
         ),
         "hint_running": (
-            "A simulação está em andamento. Observe a "
-            "trajetória: a nave contorna a Terra, cai "
-            "em direção a ela ou se afasta?"
+            "Olhe o caminho da nave: ela dá a volta na Terra, cai ou vai embora?"
         ),
         "hint_completed": (
-            "Excelente trabalho, Ada! A gravidade altera "
-            "continuamente a direção da nossa velocidade. "
-            "Por isso, uma órbita é uma queda contínua "
-            "ao redor da Terra, e não diretamente sobre ela."
+            "Muito bem, Ada! A gravidade puxa a nave o tempo todo, mas ela vai tão rápido para o lado que nunca chega ao chão. Isso é uma órbita: cair em volta da Terra sem parar!"
         ),
         "hint_1": (
-            "A gravidade atrai a nave em direção à Terra. "
-            "Uma velocidade lateral faz a nave avançar "
-            "enquanto a gravidade curva sua trajetória."
+            "A gravidade puxa a nave para a Terra. Se a nave for bem rápido para o lado, ela segue em frente enquanto a gravidade transforma o caminho numa curva."
         ),
         "hint_2": (
-            "Uma velocidade muito baixa faz a órbita "
-            "se aproximar da Terra. Uma velocidade "
-            "muito alta pode produzir uma órbita "
-            "alongada ou até uma trajetória de escape."
+            "Devagar demais, a nave cai. Rápido demais, ela faz uma volta bem esticada ou até vai embora da Terra."
         ),
         "hint_3": (
-            "Observe a velocidade circular indicada "
-            "no painel. Ela é calculada a partir "
-            "da gravidade terrestre e da nossa "
-            "distância inicial ao centro da Terra."
+            "Olhe a 'velocidade da órbita' no painel. É a velocidade certinha para dar voltas nesta altura."
         ),
         "hint_4": (
-            "A 400 km de altitude, a velocidade circular "
-            "é de aproximadamente {speed} km/s. "
-            "Tente ajustar o controle para um valor próximo."
+            "Nesta altura (400 km), a velocidade da órbita é de uns {speed} km/s. Coloque o controle perto desse número."
         ),
         "collision": (
-            "Nossa velocidade lateral estava muito baixa. "
-            "A gravidade fez a nave colidir com a Terra. "
-            "Tente aumentar a velocidade inicial."
+            "Fomos devagar demais. A gravidade puxou a nave de volta para a Terra. Tente uma velocidade maior."
         ),
         "escape": (
-            "Ultrapassamos a velocidade de escape local. "
-            "A nave possui energia suficiente para escapar "
-            "da atração gravitacional terrestre. "
-            "Tente diminuir a velocidade."
+            "Fomos rápido demais! A nave ganhou tanta velocidade que escapou da gravidade da Terra. Tente uma velocidade menor."
         ),
         "elliptical_low": (
-            "A nave permaneceu gravitacionalmente ligada "
-            "à Terra, mas sua órbita passa muito perto "
-            "do planeta. Aumente a velocidade inicial "
-            "em direção à velocidade circular."
+            "Quase! A nave deu a volta, mas passou perto demais da Terra. Aumente um pouco a velocidade."
         ),
         "elliptical_high": (
-            "A nave entrou em uma órbita alongada. "
-            "Partimos com velocidade superior à "
-            "velocidade circular. Tente reduzi-la "
-            "um pouco."
+            "Quase! A volta ficou esticada, porque fomos um pouco rápido demais. Diminua um pouquinho."
         ),
         "elliptical_other": (
-            "A órbita ainda não está suficientemente "
-            "circular. Tente ajustar a velocidade "
-            "em incrementos menores."
+            "A volta ainda não está redondinha. Tente mudar a velocidade aos pouquinhos."
         ),
         "stable_orbit": (
-            "Inserção orbital bem-sucedida! A nave se "
-            "desloca lateralmente rápido o suficiente "
-            "para que a gravidade curve sua trajetória "
-            "ao redor da Terra. Alcançamos uma órbita estável!"
+            "Conseguimos! A nave vai tão rápido para o lado que a gravidade só faz ela girar em volta da Terra. Estamos em órbita!"
         ),
         "simulation_complete": (
-            "Simulação concluída. Vamos revisar "
-            "a velocidade inicial e tentar novamente."
+            "Fim do teste. Vamos ajustar a velocidade e tentar de novo."
         ),
         "velocity_escape": (
-            "Essa velocidade é igual ou superior à "
-            "velocidade de escape. A nave pode "
-            "abandonar a órbita terrestre."
+            "Essa velocidade é alta demais: a nave pode escapar da Terra."
         ),
         "velocity_low": (
-            "Essa velocidade é bastante baixa para "
-            "a altitude atual. A gravidade pode "
-            "fazer a nave colidir com a Terra."
+            "Essa velocidade é baixa demais: a nave pode cair."
         ),
         "velocity_high": (
-            "Essa velocidade é superior à velocidade "
-            "circular. Espere uma órbita mais alongada."
+            "Essa velocidade está um pouco alta: a volta pode ficar esticada."
         ),
         "velocity_near": (
-            "Essa velocidade está mais próxima "
-            "da faixa necessária para uma órbita "
-            "circular. Inicie o lançamento e "
-            "observe a trajetória."
+            "Essa velocidade parece boa! Lance e veja o que acontece."
         ),
         "launch_started": (
-            "Lançamento iniciado. Observe como a "
-            "gravidade terrestre modifica "
-            "a trajetória da nave."
+            "Lançamento! Veja como a gravidade da Terra vai curvando o caminho da nave."
         ),
         "simulation_reset": (
-            "Simulação reiniciada. Ajuste a velocidade "
-            "inicial e tente novamente. Você também "
-            "pode me pedir uma dica."
+            "Tudo pronto de novo. Escolha a velocidade e lance. Se quiser, peça uma dica!"
         ),
     },
 }
