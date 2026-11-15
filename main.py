@@ -18,6 +18,7 @@ from core.ui import (
 )
 
 from screens.intro_screen import IntroScreen
+from screens.mission_log import MissionLogScreen
 from screens.story_dialogue import StoryDialogueScreen
 
 from puzzles.quiz_screen import QuizScreen
@@ -235,6 +236,13 @@ class App(tk.Tk):
             )
             return
 
+        if puzzle_type == "mission_leg":
+            self.open_mission_log(
+                engine,
+                puzzle_id
+            )
+            return
+
         raise ValueError(
             f"Unsupported standalone puzzle: {puzzle_id}"
         )
@@ -303,6 +311,28 @@ class App(tk.Tk):
                 }
             ),
             on_back=lambda: self.return_from_puzzle(engine)
+        )
+
+        self._switch(screen)
+
+    # ========================================================
+    # DIÁRIO DE BORDO — SIMULAÇÃO DOS RECURSOS DA NAVE
+    # ========================================================
+
+    def open_mission_log(self, engine, leg_id):
+        print(f"[GAME] Opening ship's log: {leg_id}")
+
+        screen = MissionLogScreen(
+            self,
+            engine,
+            leg_id,
+            self.t,
+            language=self.current_language(),
+            on_complete=lambda result: self.finish_puzzle(
+                engine,
+                leg_id,
+                result
+            )
         )
 
         self._switch(screen)
@@ -378,6 +408,67 @@ class App(tk.Tk):
         print("[GAME] Saved game loaded.")
 
 
+def parse_dev_args(argv):
+    """Atalhos para testar sem jogar tudo desde o começo.
+
+    python main.py --capitulo 2                 começa no capítulo 2
+    python main.py --capitulo 2 --cena rover_interception
+    python main.py --capitulo 1 --cena travel_to_mars --fala 4
+    python main.py --diario travel_earth_mars   abre o Diário de Bordo
+    python main.py --cenas                      lista capítulos e cenas
+    """
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="ASTRA — atalhos de teste"
+    )
+    parser.add_argument("--capitulo", type=int,
+                        help="número do capítulo (0, 1, 2...)")
+    parser.add_argument("--cena",
+                        help="id da cena no story.json")
+    parser.add_argument("--fala", type=int, default=0,
+                        help="começar na fala N da cena (0 = primeira)")
+    parser.add_argument("--diario",
+                        help="abre direto um trecho do Diário de Bordo")
+    parser.add_argument("--cenas", action="store_true",
+                        help="lista os capítulos e cenas e sai")
+    return parser.parse_args(argv)
+
+
+def list_scenes():
+    engine_root = StoryEngine(chapter=0)
+    chapter = 0
+    while engine_root.chapter_exists(chapter):
+        engine_root.load_chapter(chapter)
+        print(f"\nCapítulo {chapter}:")
+        for scene_id, scene in engine_root.story["scenes"].items():
+            extra = f"  -> {scene['puzzle']}" if scene.get("puzzle") else ""
+            print(f"  {scene_id} ({len(scene.get('dialogues', []))} falas){extra}")
+        chapter += 1
+
+
 if __name__ == "__main__":
+    import sys
+
+    args = parse_dev_args(sys.argv[1:])
+
+    if args.cenas:
+        list_scenes()
+        raise SystemExit
+
     app = App()
+
+    if args.diario:
+        engine = StoryEngine(chapter=args.capitulo or 1)
+        app.audio_manager.play_music("background.wav")
+        app.open_mission_log(engine, args.diario)
+
+    elif args.capitulo is not None:
+        engine = StoryEngine(chapter=args.capitulo)
+        if args.cena:
+            engine.change_scene(args.cena)
+            engine.dialogue_index = args.fala
+        app.audio_manager.play_music("background.wav")
+        app._start(engine)
+
     app.mainloop()

@@ -3,17 +3,42 @@ import math
 import time
 import tkinter as tk
 
+from core.ui import (
+    ACCENT, BACKGROUND_IMAGE, BG as UI_BG, BOX_FILL, CHARACTERS,
+    CHARACTERS_DIR, FEEDBACK_COLOR, IMAGES_DIR, MINIGAME_MUTED,
+    MINIGAME_PANEL, MINIGAME_SUCCESS, TITLE, TITLE_FONT,
+    CanvasSlider, CosmoHint, MenuButton, draw_minigame_heading,
+    draw_minigame_panel, fit_content, fit_image, font_or_fallback,
+    rounded_rect,
+)
+
+
+# Imagens usadas no minigame (sem o arquivo, volta o desenho simples)
+MARS_BACKGROUND = BACKGROUND_IMAGE                 # paisagem de Marte
+ADA_IMAGE = CHARACTERS_DIR / CHARACTERS["Ada"]["image"]
+ROVER_IMAGE = IMAGES_DIR / "hover.png"
+
+WIDTH, HEIGHT = 900, 600
+SCENE_WIDTH = 680          # a cena fica à esquerda do painel
+
 
 class MarsGravityUI(tk.Frame):
-    BG = "#081321"
-    PANEL = "#142238"
-    CARD = "#1B304B"
-    TEXT = "#EAF2FF"
-    MUTED = "#A5B7CF"
-    CYAN = "#65D6FF"
-    GREEN = "#77E6B6"
-    GOLD = "#FFD17B"
+    # Cores (identidade visual do jogo, de core/ui.py)
+    BG = "#1A0E0B"
+    PANEL = BOX_FILL
+    CARD = "#1E2A44"
+    TEXT = TITLE
+    MUTED = MINIGAME_MUTED
+    CYAN = ACCENT
+    GREEN = MINIGAME_SUCCESS
+    GOLD = FEEDBACK_COLOR
     RED = "#FF808C"
+
+    # Terreno
+    ROCK = "#8E4B3B"
+    ROCK_EDGE = "#C37A58"
+    ROCK_TOP = "#E3A076"
+    ROCK_DOT = "#B16A50"
 
     GRAVITY_MARS = 3.71
     GRAVITY_EARTH = 9.81
@@ -25,6 +50,9 @@ class MarsGravityUI(tk.Frame):
     PLAYER_RADIUS = 13
     HORIZONTAL_SPEED = 125.0
     MAX_JUMP_SPEED = 12.0
+
+    # Sobe o mundo na tela para a Ada não ficar atrás do COSMO
+    WORLD_OFFSET_Y = -12
 
     TEXTS = {
         "pt_BR": {
@@ -89,6 +117,7 @@ class MarsGravityUI(tk.Frame):
             "weight": "Em Marte, você pesa só 38% do seu peso na Terra",
             "trajectory": "CAMINHO DO PULO",
             "legend": "Linha tracejada: pulo reto para cima, sem andar",
+            "telemetry": "TELEMETRIA",
         },
         "en": {
             "title": "MARTIAN GRAVITY",
@@ -152,6 +181,7 @@ class MarsGravityUI(tk.Frame):
             "weight": "On Mars, you weigh only 38% of your Earth weight",
             "trajectory": "JUMP PATH",
             "legend": "Dashed line: jumping straight up, without walking",
+            "telemetry": "TELEMETRY",
         },
     }
 
@@ -202,6 +232,7 @@ class MarsGravityUI(tk.Frame):
         self.rover_x = 1430
         self.rover_y = 440
 
+        self.continue_button = None
         self.reset_player()
         self.build_ui()
         self.bind_controls()
@@ -226,479 +257,141 @@ class MarsGravityUI(tk.Frame):
         return text.format(**kwargs) if kwargs else text
 
     def set_language(self, language):
+        """Troca o idioma redesenhando a parte fixa da tela."""
         self.language = self.normalize_language(language)
-
-        self.title_label.config(text=self.tr("title"))
-        self.chapter_label.config(text=self.tr("chapter"))
-        self.objective_label.config(text=self.tr("objective"))
-
-        self.gravity_label.config(text=self.tr("comparison"))
-        self.earth_label.config(
-            text=f"{self.tr('earth')}: {self.GRAVITY_EARTH:.2f} m/s²"
-        )
-        self.mars_label.config(
-            text=f"{self.tr('mars')}: {self.GRAVITY_MARS:.2f} m/s²"
-        )
-        self.weight_label.config(text=self.tr("weight"))
-
-        self.jump_label.config(text=self.tr("jump_force"))
-        self.instructions_label.config(text=self.tr("instructions"))
-        self.jump_button.config(text=self.tr("jump"))
-        self.reset_button.config(text=self.tr("reset"))
-
-        self.hint_title.config(text=self.tr("hint_title"))
-        self.status_title.config(text=self.tr("status_title"))
-
-        if self.on_back:
-            self.back_button.config(text=self.tr("back"))
-
-        self.continue_button.config(text=self.tr("continue"))
-
-        if self.hint_index >= 4:
-            self.hint_button.config(text=self.tr("all_hints"))
-        else:
-            self.hint_button.config(text=self.tr("hint"))
-
-        if self.hint_index:
-            self.hint_text.set(
-                self.tr(f"hint_{self.hint_index}")
-            )
-
+        self.canvas.delete("all")
+        for button in self.static_buttons:
+            button.destroy()
+        self.build_static()
         self.refresh()
 
     # ==================================================
-    # UI HELPERS
-    # ==================================================
-
-    def make_label(
-        self,
-        parent,
-        text=None,
-        variable=None,
-        size=10,
-        color=None,
-        bold=False,
-        wrap=0,
-    ):
-        options = {
-            "bg": self.PANEL,
-            "fg": color or self.TEXT,
-            "font": (
-                "Arial",
-                size,
-                "bold" if bold else "normal",
-            ),
-            "anchor": "w",
-            "justify": "left",
-        }
-
-        if wrap:
-            options["wraplength"] = wrap
-
-        if variable is not None:
-            options["textvariable"] = variable
-        else:
-            options["text"] = text
-
-        return tk.Label(parent, **options)
-
-    def make_button(
-        self,
-        parent,
-        text,
-        command,
-        color=None,
-        foreground=None,
-    ):
-        return tk.Button(
-            parent,
-            text=text,
-            command=command,
-            bg=color or self.CARD,
-            fg=foreground or self.TEXT,
-            activebackground=self.CYAN,
-            activeforeground=self.BG,
-            disabledforeground="#708199",
-            relief="flat",
-            bd=0,
-            font=("Arial", 9, "bold"),
-            cursor="hand2",
-            pady=8,
-        )
-
-    def section(self, text):
-        label = self.make_label(
-            self.content,
-            text=text,
-            size=9,
-            color=self.MUTED,
-            bold=True,
-        )
-        label.pack(
-            anchor="w",
-            padx=14,
-            pady=(15, 5),
-        )
-        return label
-
-    # ==================================================
-    # INTERFACE
+    # INTERFACE (identidade visual do jogo)
     # ==================================================
 
     def build_ui(self):
-        self.scene = tk.Canvas(
+        self.canvas = tk.Canvas(
             self,
+            width=WIDTH,
+            height=HEIGHT,
             bg=self.BG,
             highlightthickness=0,
         )
-        self.scene.pack(
-            side="left",
-            fill="both",
-            expand=True,
+        self.canvas.pack(fill="both", expand=True)
+
+        # Mantém o nome antigo usado pelo resto do código
+        self.scene = self.canvas
+
+        # Imagens (carregadas uma vez só)
+        self.background_img = None
+        if MARS_BACKGROUND.exists():
+            img = tk.PhotoImage(file=str(MARS_BACKGROUND))
+            factor = max(1, img.width() // WIDTH, img.height() // HEIGHT)
+            self.background_img = img.subsample(factor) if factor > 1 else img
+
+        self.ada_img = (
+            fit_image(ADA_IMAGE, 34, 44) if ADA_IMAGE.exists() else None
         )
 
-        self.panel = tk.Frame(
-            self,
-            bg=self.PANEL,
-            width=300,
-        )
-        self.panel.pack(side="right", fill="y")
-        self.panel.pack_propagate(False)
+        self.rover_img = None
+        if ROVER_IMAGE.exists():
+            self.rover_img, self.rover_box = fit_content(ROVER_IMAGE, 90)
 
-        self.scroll = tk.Canvas(
-            self.panel,
-            bg=self.PANEL,
-            highlightthickness=0,
-        )
-        scrollbar = tk.Scrollbar(
-            self.panel,
-            orient="vertical",
-            command=self.scroll.yview,
-        )
-        self.scroll.configure(
-            yscrollcommand=scrollbar.set
-        )
+        self.static_buttons = []
+        self.build_static()
 
-        scrollbar.pack(side="right", fill="y")
-        self.scroll.pack(
-            side="left",
-            fill="both",
-            expand=True,
-        )
+    def build_static(self):
+        """Partes que não se movem: fundo, título, painel e COSMO."""
+        c = self.canvas
 
-        self.content = tk.Frame(
-            self.scroll,
-            bg=self.PANEL,
-        )
+        if self.background_img is not None:
+            c.create_image(0, 0, image=self.background_img, anchor="nw")
 
-        window_id = self.scroll.create_window(
-            (0, 0),
-            window=self.content,
-            anchor="nw",
-        )
+        # Tudo o que se move é desenhado logo acima deste marcador
+        self.layer_marker = c.create_line(0, 0, 0, 0, state="hidden")
 
-        self.content.bind(
-            "<Configure>",
-            lambda event: self.scroll.configure(
-                scrollregion=self.scroll.bbox("all")
-            ),
-        )
+        draw_minigame_heading(c, self.tr("chapter"), self.tr("objective"))
 
-        self.scroll.bind(
-            "<Configure>",
-            lambda event: self.scroll.itemconfigure(
-                window_id,
-                width=event.width,
-            ),
-        )
+        # ---------------- Painel ----------------
+        draw_minigame_panel(c, self.tr("title").replace(" ", "\n", 1))
+        x0, y0, x1, y1 = MINIGAME_PANEL
+        cx = (x0 + x1) / 2
+        left = x0 + 18
+        text_w = (x1 - x0) - 36
 
-        self.scroll.bind(
-            "<MouseWheel>",
-            lambda event: self.scroll.yview_scroll(
-                -int(event.delta / 120),
-                "units",
-            ),
-        )
-
-        self.title_label = self.make_label(
-            self.content,
-            text=self.tr("title"),
-            size=16,
-            color=self.CYAN,
-            bold=True,
-        )
-        self.title_label.pack(
-            anchor="w",
-            padx=14,
-            pady=(16, 4),
-        )
-
-        self.chapter_label = self.make_label(
-            self.content,
-            text=self.tr("chapter"),
-            size=9,
-            color=self.MUTED,
-        )
-        self.chapter_label.pack(
-            anchor="w",
-            padx=14,
-        )
-
-        self.objective_label = self.make_label(
-            self.content,
-            text=self.tr("objective"),
-            wrap=260,
-        )
-        self.objective_label.pack(
-            anchor="w",
-            padx=14,
-            pady=(15, 10),
-        )
-
-        self.gravity_label = self.section(
-            self.tr("comparison")
-        )
-
-        self.earth_label = self.make_label(
-            self.content,
+        c.create_text(
+            left, 106, anchor="nw", width=text_w,
             text=(
-                f"{self.tr('earth')}: "
-                f"{self.GRAVITY_EARTH:.2f} m/s²"
+                f"{self.tr('earth')}: {self.GRAVITY_EARTH:.2f} m/s²\n"
+                f"{self.tr('mars')}: {self.GRAVITY_MARS:.2f} m/s²"
             ),
+            font=("Arial", 10, "bold"), fill=self.TEXT,
         )
-        self.earth_label.pack(anchor="w", padx=14)
-
-        self.mars_label = self.make_label(
-            self.content,
-            text=(
-                f"{self.tr('mars')}: "
-                f"{self.GRAVITY_MARS:.2f} m/s²"
-            ),
-            color=self.GOLD,
-        )
-        self.mars_label.pack(
-            anchor="w",
-            padx=14,
-            pady=4,
-        )
-
-        self.weight_label = self.make_label(
-            self.content,
+        c.create_text(
+            left, 142, anchor="nw", width=text_w,
             text=self.tr("weight"),
-            wrap=260,
-            color=self.MUTED,
-        )
-        self.weight_label.pack(
-            anchor="w",
-            padx=14,
+            font=("Arial", 9), fill=self.MUTED,
         )
 
-        self.jump_label = self.section(
-            self.tr("jump_force")
+        c.create_text(cx, 196, text=self.tr("jump_force"),
+                      font=("Arial", 10), fill=self.MUTED)
+        self.jump_value_item = c.create_text(
+            cx, 217, font=("Arial", 16, "bold"), fill=self.CYAN,
+        )
+        self.jump_slider = CanvasSlider(
+            c, x0 + 22, 243, (x1 - x0) - 44,
+            from_=3.0, to=self.MAX_JUMP_SPEED, resolution=0.5,
+            variable=self.jump_var, command=self.change_jump,
         )
 
-        self.jump_value_label = self.make_label(
-            self.content,
-            color=self.CYAN,
-            size=12,
-            bold=True,
-        )
-        self.jump_value_label.pack(
-            anchor="w",
-            padx=14,
-        )
+        # Andar: segurar o botão (ou usar A/D e as setas)
+        for text, direction, bx in (("◀", -1, cx - 42), ("▶", 1, cx + 42)):
+            button = MenuButton(c, bx, 274, text, lambda: None,
+                                width=76, height=32, font_size=13)
+            c.tag_bind(button.tag, "<ButtonPress-1>",
+                       lambda e, d=direction: self.set_button_direction(d))
+            c.tag_bind(button.tag, "<ButtonRelease-1>",
+                       lambda e: self.set_button_direction(0))
+            self.static_buttons.append(button)
 
-        self.jump_slider = tk.Scale(
-            self.content,
-            from_=3.0,
-            to=self.MAX_JUMP_SPEED,
-            resolution=0.5,
-            orient="horizontal",
-            variable=self.jump_var,
-            command=self.change_jump,
-            showvalue=False,
-            bg=self.PANEL,
-            fg=self.TEXT,
-            troughcolor=self.CARD,
-            highlightthickness=0,
+        self.jump_button = MenuButton(
+            c, cx, 314, self.tr("jump"), self.jump,
+            width=160, height=40, font_size=13, primary=True,
         )
-        self.jump_slider.pack(
-            fill="x",
-            padx=14,
+        self.hint_button = MenuButton(
+            c, cx, 354, self.tr("hint"), self.show_hint,
+            width=160, height=32, font_size=10,
         )
-
-        self.instructions_label = self.make_label(
-            self.content,
-            text=self.tr("instructions"),
-            size=9,
-            color=self.MUTED,
-            wrap=260,
+        self.reset_button = MenuButton(
+            c, cx, 390, self.tr("reset"), self.reset_mission,
+            width=160, height=32, font_size=10,
         )
-        self.instructions_label.pack(
-            anchor="w",
-            padx=14,
-            pady=(10, 5),
-        )
-
-        movement = tk.Frame(
-            self.content,
-            bg=self.PANEL,
-        )
-        movement.pack(
-            fill="x",
-            padx=14,
-            pady=5,
-        )
-
-        self.left_button = self.make_button(
-            movement,
-            "◀",
-            lambda: None,
-        )
-        self.right_button = self.make_button(
-            movement,
-            "▶",
-            lambda: None,
-        )
-
-        self.left_button.pack(
-            side="left",
-            fill="x",
-            expand=True,
-            padx=(0, 4),
-        )
-        self.right_button.pack(
-            side="left",
-            fill="x",
-            expand=True,
-        )
-
-        self.left_button.bind(
-            "<ButtonPress-1>",
-            lambda event: self.set_button_direction(-1),
-        )
-        self.left_button.bind(
-            "<ButtonRelease-1>",
-            lambda event: self.set_button_direction(0),
-        )
-        self.right_button.bind(
-            "<ButtonPress-1>",
-            lambda event: self.set_button_direction(1),
-        )
-        self.right_button.bind(
-            "<ButtonRelease-1>",
-            lambda event: self.set_button_direction(0),
-        )
-
-        self.jump_button = self.make_button(
-            self.content,
-            self.tr("jump"),
-            self.jump,
-            self.CYAN,
-            self.BG,
-        )
-        self.jump_button.pack(
-            fill="x",
-            padx=14,
-            pady=(8, 5),
-        )
-
-        self.section("TELEMETRY / TELEMETRIA")
-
-        for variable in (
-            self.distance_text,
-            self.velocity_text,
-            self.height_text,
-        ):
-            self.make_label(
-                self.content,
-                variable=variable,
-                size=9,
-            ).pack(
-                anchor="w",
-                padx=14,
-                pady=3,
-            )
-
-        self.hint_title = self.section(
-            self.tr("hint_title")
-        )
-
-        self.hint_button = self.make_button(
-            self.content,
-            self.tr("hint"),
-            self.show_hint,
-        )
-        self.hint_button.pack(
-            fill="x",
-            padx=14,
-            pady=5,
-        )
-
-        self.make_label(
-            self.content,
-            variable=self.hint_text,
-            color=self.GOLD,
-            wrap=260,
-            size=9,
-        ).pack(
-            anchor="w",
-            padx=14,
-            pady=5,
-        )
-
-        self.status_title = self.section(
-            self.tr("status_title")
-        )
-
-        self.make_label(
-            self.content,
-            variable=self.status_text,
-            color=self.GREEN,
-            wrap=260,
-            size=9,
-        ).pack(
-            anchor="w",
-            padx=14,
-            pady=5,
-        )
-
-        self.continue_button = self.make_button(
-            self.content,
-            self.tr("continue"),
-            self.complete_mission,
-            self.GREEN,
-            self.BG,
-        )
-        self.continue_button.pack(
-            fill="x",
-            padx=14,
-            pady=(15, 5),
-        )
-        self.continue_button.pack_forget()
-
-        self.reset_button = self.make_button(
-            self.content,
-            self.tr("reset"),
-            self.reset_mission,
-        )
-        self.reset_button.pack(
-            fill="x",
-            padx=14,
-            pady=(10, 5),
-        )
+        self.static_buttons += [self.jump_button, self.hint_button,
+                                self.reset_button]
 
         if self.on_back:
-            self.back_button = self.make_button(
-                self.content,
-                self.tr("back"),
-                self.go_back,
+            self.back_button = MenuButton(
+                c, cx, 426, self.tr("back"), self.go_back,
+                width=160, height=32, font_size=10,
             )
-            self.back_button.pack(
-                fill="x",
-                padx=14,
-                pady=(5, 15),
-            )
+            self.static_buttons.append(self.back_button)
+            line_y = 454
+        else:
+            line_y = 418
+
+        # Telemetria
+        c.create_line(x0 + 18, line_y, x1 - 18, line_y,
+                      fill="#24324F", width=2)
+        c.create_text(left, line_y + 8, anchor="nw",
+                      text=self.tr("telemetry"),
+                      font=("Arial", 9, "bold"), fill=self.MUTED)
+        self.telemetry_item = c.create_text(
+            left, line_y + 26, anchor="nw", width=text_w,
+            font=("Arial", 9), fill=self.TEXT,
+        )
+
+        # COSMO no canto inferior esquerdo
+        self.hint = CosmoHint(c, right=SCENE_WIDTH - 20)
 
     # ==================================================
     # PLAYER STATE
@@ -731,7 +424,7 @@ class MarsGravityUI(tk.Frame):
 
         self.hint_index = 0
         self.hint_text.set("")
-        self.hint_button.configure(
+        self.hint_button.config(
             state="normal",
             text=self.tr("hint"),
         )
@@ -740,7 +433,7 @@ class MarsGravityUI(tk.Frame):
         self.camera_x = 0.0
         self.last_frame = time.monotonic()
 
-        self.continue_button.pack_forget()
+        self._hide_continue()
         self.refresh()
 
     # ==================================================
@@ -949,12 +642,7 @@ class MarsGravityUI(tk.Frame):
 
         self.status_key = "status_success"
 
-        self.continue_button.pack(
-            fill="x",
-            padx=14,
-            pady=(15, 5),
-            before=self.reset_button,
-        )
+        self._show_continue()
 
     def complete_mission(self):
         if not self.completed:
@@ -1020,21 +708,37 @@ class MarsGravityUI(tk.Frame):
         )
 
         if self.hint_index >= 4:
-            self.hint_button.configure(
+            self.hint_button.config(
                 state="disabled",
                 text=self.tr("all_hints"),
             )
+
+
+    # Botão "Continuar" dentro da mensagem de vitória
+    def _show_continue(self):
+        self._hide_continue()
+        self.continue_button = MenuButton(
+            self.canvas, SCENE_WIDTH / 2, 262, self.tr("continue"),
+            self.complete_mission, width=200, height=42, font_size=12,
+            primary=True,
+        )
+
+    def _hide_continue(self):
+        button = getattr(self, "continue_button", None)
+        if button is not None:
+            button.destroy()
+        self.continue_button = None
 
     # ==================================================
     # DRAWING
     # ==================================================
 
     def draw_scene(self):
-        canvas = self.scene
-        canvas.delete("all")
+        canvas = self.canvas
+        canvas.delete("dyn")
 
-        width = max(canvas.winfo_width(), 400)
-        height = max(canvas.winfo_height(), 400)
+        width = SCENE_WIDTH
+        height = HEIGHT
 
         # Follow Ada as she moves across the map.
         desired_camera = max(
@@ -1049,7 +753,7 @@ class MarsGravityUI(tk.Frame):
             desired_camera - self.camera_x
         ) * 0.12
 
-        offset_y = max(0, (height - 560) / 2)
+        offset_y = self.WORLD_OFFSET_Y
 
         def screen(x, y):
             return (
@@ -1057,27 +761,9 @@ class MarsGravityUI(tk.Frame):
                 y + offset_y,
             )
 
-        # ------------------------------------------
-        # SKY
-        # ------------------------------------------
-
-        for index in range(90):
-            sx = (
-                index * 193 + 47
-            ) % max(width, 1)
-
-            sy = (
-                index * 79 + 31
-            ) % max(height, 1)
-
-            canvas.create_oval(
-                sx,
-                sy,
-                sx + 1.5,
-                sy + 1.5,
-                fill="#43516C",
-                outline="",
-            )
+        def item(kind, *args, **kwargs):
+            kwargs["tags"] = "dyn"
+            return getattr(canvas, f"create_{kind}")(*args, **kwargs)
 
         # ------------------------------------------
         # MARTIAN TERRAIN
@@ -1092,117 +778,61 @@ class MarsGravityUI(tk.Frame):
             if x2 < 0 or x1 > width:
                 continue
 
-            canvas.create_rectangle(
-                x1,
-                y1,
-                x2,
-                height,
-                fill="#8E4B3B",
-                outline="#C37A58",
-                width=2,
-            )
+            x2 = min(x2, width)
 
-            canvas.create_line(
-                x1,
-                y1,
-                x2,
-                y1,
-                fill="#E3A076",
-                width=5,
-            )
+            item("rectangle", x1, y1, x2, height,
+                 fill=self.ROCK, outline=self.ROCK_EDGE, width=2)
+            item("line", x1, y1, x2, y1, fill=self.ROCK_TOP, width=5)
 
             # Decorative rocks.
             for rock in range(3):
                 rx = x1 + 18 + rock * 37
 
                 if rx < x2 - 10:
-                    canvas.create_oval(
-                        rx - 6,
-                        y1 - 7,
-                        rx + 8,
-                        y1 + 2,
-                        fill="#B16A50",
-                        outline="",
-                    )
+                    item("oval", rx - 6, y1 - 7, rx + 8, y1 + 2,
+                         fill=self.ROCK_DOT, outline="")
 
         # ------------------------------------------
         # PREDICTED JUMP
         # ------------------------------------------
 
         if self.grounded and not self.completed:
-            trajectory = self.predicted_trajectory()
-
             coordinates = []
 
-            for x, y in trajectory:
+            for x, y in self.predicted_trajectory():
                 sx, sy = screen(x, y)
                 coordinates.extend((sx, sy))
 
             if len(coordinates) >= 4:
-                canvas.create_line(
-                    *coordinates,
-                    fill=self.GOLD,
-                    width=2,
-                    dash=(4, 5),
-                )
+                item("line", *coordinates, fill=self.GOLD, width=2,
+                     dash=(4, 5))
 
         # ------------------------------------------
         # ROVER
         # ------------------------------------------
 
-        rover_x, rover_y = screen(
-            self.rover_x,
-            self.rover_y,
-        )
+        rover_x, rover_y = screen(self.rover_x, self.rover_y)
 
-        canvas.create_rectangle(
-            rover_x - 25,
-            rover_y - 33,
-            rover_x + 25,
-            rover_y - 10,
-            fill="#D8B46E",
-            outline="#FFE4A9",
-            width=2,
-        )
+        if rover_x < width + 80:
+            if self.rover_img is not None:
+                bx0, by0, bx1, by1 = self.rover_box
+                item("oval", rover_x - (bx1 - bx0) / 2, rover_y - 5,
+                     rover_x + (bx1 - bx0) / 2, rover_y + 6,
+                     fill="#3A1A12", outline="")
+                item("image", rover_x - (bx0 + bx1) / 2, rover_y - by1,
+                     image=self.rover_img, anchor="nw")
+                label_y = rover_y - (by1 - by0) - 14
+            else:
+                item("rectangle", rover_x - 25, rover_y - 33,
+                     rover_x + 25, rover_y - 10, fill="#D8B46E",
+                     outline="#FFE4A9", width=2)
+                for wheel_x in (rover_x - 17, rover_x + 17):
+                    item("oval", wheel_x - 7, rover_y - 14, wheel_x + 7,
+                         rover_y, fill="#35445A", outline=self.TEXT)
+                label_y = rover_y - 50
 
-        for wheel_x in (
-            rover_x - 17,
-            rover_x + 17,
-        ):
-            canvas.create_oval(
-                wheel_x - 7,
-                rover_y - 14,
-                wheel_x + 7,
-                rover_y,
-                fill="#35445A",
-                outline=self.TEXT,
-            )
-
-        canvas.create_line(
-            rover_x,
-            rover_y - 33,
-            rover_x,
-            rover_y - 60,
-            fill=self.TEXT,
-            width=2,
-        )
-
-        canvas.create_oval(
-            rover_x - 5,
-            rover_y - 66,
-            rover_x + 5,
-            rover_y - 56,
-            fill=self.CYAN,
-            outline="",
-        )
-
-        canvas.create_text(
-            rover_x,
-            rover_y - 80,
-            text=self.tr("rover"),
-            fill=self.GREEN,
-            font=("Arial", 11, "bold"),
-        )
+            item("text", rover_x, label_y, text=self.tr("rover"),
+                 fill=self.TEXT, font=("Arial", 10, "bold"))
 
         # ------------------------------------------
         # ADA
@@ -1210,211 +840,87 @@ class MarsGravityUI(tk.Frame):
 
         px, py = screen(self.x, self.y)
 
-        # Helmet
-        canvas.create_oval(
-            px - 12,
-            py - 37,
-            px + 12,
-            py - 13,
-            fill="#EAF2FF",
-            outline=self.CYAN,
-            width=2,
-        )
+        if self.ada_img is not None:
+            item("image", px, py + 2, image=self.ada_img, anchor="s")
+            label_y = py - 52
+        else:
+            item("oval", px - 12, py - 37, px + 12, py - 13,
+                 fill="#EAF2FF", outline=self.CYAN, width=2)
+            item("rectangle", px - 9, py - 13, px + 9, py - 2,
+                 fill="#EAF2FF", outline=self.CYAN)
+            label_y = py - 49
 
-        # Visor
-        canvas.create_oval(
-            px - 8,
-            py - 31,
-            px + 8,
-            py - 19,
-            fill="#65B6D6",
-            outline="",
-        )
-
-        # Suit
-        canvas.create_rectangle(
-            px - 9,
-            py - 13,
-            px + 9,
-            py - 2,
-            fill="#EAF2FF",
-            outline=self.CYAN,
-        )
-
-        # Boots
-        canvas.create_line(
-            px - 6,
-            py - 2,
-            px - 6,
-            py,
-            fill=self.GOLD,
-            width=5,
-        )
-        canvas.create_line(
-            px + 6,
-            py - 2,
-            px + 6,
-            py,
-            fill=self.GOLD,
-            width=5,
-        )
-
-        canvas.create_text(
-            px,
-            py - 49,
-            text=self.tr("ada"),
-            fill=self.TEXT,
-            font=("Arial", 9, "bold"),
-        )
-
-        # ------------------------------------------
-        # HUD
-        # ------------------------------------------
-
-        canvas.create_text(
-            18,
-            18,
-            text=self.tr("title"),
-            fill=self.CYAN,
-            anchor="nw",
-            font=("Arial", 17, "bold"),
-        )
-
-        canvas.create_text(
-            18,
-            50,
-            text=(
-                f"{self.tr('mars')}: "
-                f"{self.GRAVITY_MARS:.2f} m/s²"
-            ),
-            fill=self.GOLD,
-            anchor="nw",
-            font=("Arial", 11),
-        )
-
-        canvas.create_text(
-            18,
-            74,
-            text=(
-                f"{self.tr('jump_force')}: "
-                f"{self.jump_var.get():.1f} m/s"
-            ),
-            fill=self.TEXT,
-            anchor="nw",
-            font=("Arial", 10),
-        )
+        item("text", px, label_y, text=self.tr("ada"), fill=self.TEXT,
+             font=("Arial", 9, "bold"))
 
         # ------------------------------------------
         # COSMO BRIEFING
         # ------------------------------------------
 
         if self.completed:
-            briefing = self.tr("cosmo_success")
+            briefing, color = self.tr("cosmo_success"), self.GREEN
         elif self.status_key == "status_fall":
-            briefing = self.tr("cosmo_fall")
+            briefing, color = self.tr("cosmo_fall"), self.GOLD
         elif not self.grounded:
-            briefing = self.tr("cosmo_air")
+            briefing, color = self.tr("cosmo_air"), self.TEXT
+        elif self.hint_text.get():
+            briefing, color = self.hint_text.get(), self.GOLD
         else:
-            briefing = self.tr("cosmo_ready")
+            briefing, color = self.tr("cosmo_ready"), self.TEXT
 
-        canvas.create_rectangle(
-            10,
-            height - 90,
-            width - 10,
-            height - 10,
-            fill=self.PANEL,
-            outline=self.CARD,
-            width=2,
-        )
+        self.hint.set(briefing.replace("COSMO: ", ""), color)
 
-        canvas.create_text(
-            22,
-            height - 76,
-            text=self.tr("hint_title"),
-            fill=self.CYAN,
-            anchor="nw",
-            font=("Arial", 9, "bold"),
-        )
-
-        canvas.create_text(
-            22,
-            height - 53,
-            text=briefing,
-            fill=self.TEXT,
-            anchor="nw",
-            width=width - 48,
-            font=("Arial", 9),
-        )
+        # O que se move fica acima do fundo e atrás do painel e do COSMO
+        canvas.tag_raise("dyn", self.layer_marker)
 
         # ------------------------------------------
         # SUCCESS OVERLAY
         # ------------------------------------------
 
         if self.completed:
-            canvas.create_rectangle(
-                width / 2 - 190,
-                height * 0.25 - 30,
-                width / 2 + 190,
-                height * 0.25 + 95,
-                fill=self.PANEL,
-                outline=self.GREEN,
-                width=2,
-            )
-
-            canvas.create_text(
-                width / 2,
-                height * 0.25,
-                text=self.tr("success"),
-                fill=self.GREEN,
-                font=("Arial", 19, "bold"),
-            )
-
-            canvas.create_text(
-                width / 2,
-                height * 0.25 + 45,
-                text=self.tr("success_detail"),
-                fill=self.TEXT,
-                font=("Arial", 10),
-            )
+            cx = width / 2
+            rounded_rect(canvas, cx - 200, 150, cx + 200, 290, r=20,
+                         fill=self.PANEL, outline=self.GREEN, width=2,
+                         tags=("dyn", "success"))
+            canvas.create_text(cx, 190, text=self.tr("success"),
+                               fill=self.GREEN, tags=("dyn", "success"),
+                               font=(font_or_fallback(TITLE_FONT), 20))
+            canvas.create_text(cx, 228, text=self.tr("success_detail"),
+                               fill=self.TEXT, tags=("dyn", "success"),
+                               font=("Arial", 11))
+            canvas.tag_raise("success")
+            if self.continue_button is not None:
+                canvas.tag_raise(self.continue_button.tag)
 
     # ==================================================
     # REFRESH
     # ==================================================
 
     def refresh(self):
-        self.jump_value_label.configure(
-            text=self.tr(
-                "jump_value",
-                value=self.jump_var.get(),
-            )
+        c = self.canvas
+
+        c.itemconfigure(
+            self.jump_value_item,
+            text=self.tr("jump_value", value=self.jump_var.get()),
         )
 
         self.distance_text.set(
-            self.tr(
-                "distance",
-                value=max(0, self.rover_x - self.x) / 10,
-            )
+            self.tr("distance", value=max(0, self.rover_x - self.x) / 10)
+        )
+        self.velocity_text.set(self.tr("velocity", value=-self.vy + 0.0))
+        self.height_text.set(self.tr("height", value=self.jump_peak))
+        self.status_text.set(self.tr(self.status_key))
+
+        c.itemconfigure(
+            self.telemetry_item,
+            text="\n".join((
+                self.distance_text.get(),
+                self.velocity_text.get(),
+                self.height_text.get(),
+            )),
         )
 
-        self.velocity_text.set(
-            self.tr(
-                "velocity",
-                value=-self.vy,
-            )
-        )
-
-        self.height_text.set(
-            self.tr(
-                "height",
-                value=self.jump_peak,
-            )
-        )
-
-        self.status_text.set(
-            self.tr(self.status_key)
-        )
-
-        self.jump_button.configure(
+        self.jump_button.config(
             state=(
                 "normal"
                 if self.grounded and not self.completed
@@ -1484,14 +990,17 @@ class MarsGravityUI(tk.Frame):
 
 
 # ======================================================
-# STANDALONE TEST
+# STANDALONE TEST: python -m puzzles.mars_gravity_ui
 # ======================================================
 
 if __name__ == "__main__":
+    from core.ui import load_project_fonts
+
     root = tk.Tk()
+    load_project_fonts()
     root.title("ASTRA — Mars Gravity")
-    root.geometry("1200x700")
-    root.minsize(900, 550)
+    root.geometry(f"{WIDTH}x{HEIGHT}")
+    root.resizable(False, False)
 
     def completed():
         print("Mars gravity puzzle completed!")
@@ -1499,6 +1008,7 @@ if __name__ == "__main__":
     puzzle = MarsGravityUI(
         root,
         on_complete=completed,
+        on_back=root.destroy,
         language="pt_BR",
     )
 

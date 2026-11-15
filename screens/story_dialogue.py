@@ -14,6 +14,8 @@ class StoryDialogueScreen(DialogueScreen):
     STANDALONE_PUZZLE_TYPES = {
         "knowledge_quiz",
         "orbital_launch",
+        "mars_gravity",
+        "mission_leg",
     }
 
     def __init__(
@@ -40,7 +42,12 @@ class StoryDialogueScreen(DialogueScreen):
 
         puzzle_type = puzzle.get("type")
 
-        if puzzle_type in self.STANDALONE_PUZZLE_TYPES:
+        # Tela própria: tipos conhecidos ou qualquer puzzle com "module"
+        # (registrado pelo motor, ex.: Diário de Bordo, Gravidade Marciana)
+        if (
+            puzzle_type in self.STANDALONE_PUZZLE_TYPES
+            or "module" in puzzle
+        ):
             self.state = "busy"
 
             # Schedule the transition after the dialogue

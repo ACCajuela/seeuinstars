@@ -2,14 +2,27 @@
 import json
 from pathlib import Path
 
+from core.mission import LEGS, MissionState
+
 
 class StoryEngine:
 
     KNOWLEDGE_ASSESSMENT = "knowledge_assessment"
     ORBITAL_LAUNCH = "orbital_launch"
 
+    # Minigames com tela própria. Se uma cena do story.json pedir um
+    # destes ids em "puzzle", ele é registrado automaticamente.
+    STANDALONE_PUZZLES = {
+        "orbital_launch": "puzzles.orbital_launch_ui",
+        "mars_gravity": "puzzles.mars_gravity_ui",
+    }
+
     def __init__(self, chapter=0):
         self.project_root = Path(__file__).resolve().parent.parent
+
+        # Estado da nave (energia, oxigênio, blindagem, radiação).
+        # Dura o jogo inteiro: não é reiniciado ao trocar de capítulo.
+        self.mission = MissionState()
 
         self.chapter = chapter
         self.story = {}
@@ -101,6 +114,26 @@ class StoryEngine:
                 launch_scene["puzzle"] = (
                     self.ORBITAL_LAUNCH
                 )
+
+        # Registra os minigames com tela própria pedidos pelas cenas
+        # (ex.: "puzzle": "mars_gravity" no capítulo 2).
+        for scene in self.story["scenes"].values():
+            puzzle_id = scene.get("puzzle")
+            if (
+                puzzle_id in self.STANDALONE_PUZZLES
+                and puzzle_id not in self.puzzles
+            ):
+                self.puzzles[puzzle_id] = {
+                    "type": puzzle_id,
+                    "module": self.STANDALONE_PUZZLES[puzzle_id]
+                }
+
+            # Trechos de viagem (Diário de Bordo), ex.: travel_earth_mars
+            if puzzle_id in LEGS and puzzle_id not in self.puzzles:
+                self.puzzles[puzzle_id] = {
+                    "type": "mission_leg",
+                    "module": "screens.mission_log"
+                }
 
         start_scene = self.story["start_scene"]
 
@@ -233,6 +266,10 @@ class StoryEngine:
 
         if result is not None:
             self.puzzle_results[puzzle_id] = result
+
+            # Consequências do minigame nos recursos da nave,
+            # ex.: {"effects": {"energy": -1, "oxygen": +2}}
+            self.mission.apply_effects(result.get("effects"))
 
         print(f"[ENGINE] Puzzle completed: {puzzle_id}")
 

@@ -1,4 +1,3 @@
-
 {
   "chapter": 1,
   "title_key": "chapter_01.title",
@@ -167,7 +166,33 @@
           "speaker": "Ada",
           "text_key": "chapter_01.ada_15"
         }
-      ]
+      ],
+      "next_scene": "travel_to_mars"
+    },
+    "travel_to_mars": {
+      "dialogues": [
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_01.cosmo_17"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_01.ada_16"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_01.cosmo_18"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_01.cosmo_19"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_01.ada_17"
+        }
+      ],
+      "puzzle": "travel_earth_mars"
     }
   }
 }

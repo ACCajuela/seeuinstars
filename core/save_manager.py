@@ -2,6 +2,8 @@
 import json
 from pathlib import Path
 
+from core.mission import MissionState
+
 
 class SaveManager:
     def __init__(self):
@@ -11,11 +13,14 @@ class SaveManager:
     def save_game(self, engine, localization):
         data = {
             "language": localization.language,
+            "chapter": engine.chapter,
             "scene": self.get_scene_id(engine),
             "dialogue_index": engine.dialogue_index,
             "choices": engine.choices,
             "completed_puzzles": list(engine.completed_puzzles),
-            "pending_puzzle": engine.pending_puzzle
+            "pending_puzzle": engine.pending_puzzle,
+            # Recursos da nave (energia, oxigênio, radiação...)
+            "mission": engine.mission.to_dict()
         }
 
         with open(self.save_path, "w", encoding="utf-8") as file:
@@ -33,11 +38,18 @@ class SaveManager:
 
         localization.set_language(data["language"])
 
+        # O capítulo precisa ser carregado antes da cena.
+        # (Saves antigos não têm "chapter": eram do capítulo 0.)
+        chapter = data.get("chapter", 0)
+        if chapter != engine.chapter:
+            engine.load_chapter(chapter)
+
         engine.change_scene(data["scene"])
         engine.dialogue_index = data["dialogue_index"]
         engine.choices = data["choices"]
         engine.completed_puzzles = set(data["completed_puzzles"])
         engine.pending_puzzle = data["pending_puzzle"]
+        engine.mission = MissionState.from_dict(data.get("mission"))
 
         print("Game loaded successfully!")
         return True
@@ -46,6 +58,9 @@ class SaveManager:
         return self.save_path.exists()
 
     def get_scene_id(self, engine):
+        if getattr(engine, "scene_id", None):
+            return engine.scene_id
+
         for scene_id, scene_data in engine.story["scenes"].items():
             if scene_data is engine.scene:
                 return scene_id
