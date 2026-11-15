@@ -17,7 +17,7 @@ IMAGES_DIR = PROJECT_ROOT / "assets" / "images"
 FONTS_DIR = PROJECT_ROOT / "assets" / "fonts"
 
 BACKGROUND_IMAGE = IMAGES_DIR / "fundo-home.png"
-SAVE_FILE = PROJECT_ROOT / "save.json"
+from core.paths import SAVE_FILE  # noqa: E402  (pasta do usuário)
 
 WIDTH, HEIGHT = 900, 600
 

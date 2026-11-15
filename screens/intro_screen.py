@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pygame
 
+from core.paths import SETTINGS_FILE, audio_file
 from core.ui import IMAGES_DIR, TITLE_FONT, font_or_fallback
 
 # Foto da Terra usada no "pálido ponto azul" (PNG com fundo transparente).
@@ -46,12 +47,10 @@ class IntroScreen(tk.Frame):
             Path(__file__).resolve().parent.parent
         )
 
-        self.audio_path = (
-            self.root_path
-            / "shared_assets"
-            / "audio"
-            / "intro"
-            / "pale_blue_dot.wav"
+        # usa a versão .ogg (menor) se existir
+        self.audio_path = audio_file(
+            self.root_path / "shared_assets" / "audio" / "intro",
+            "pale_blue_dot.wav"
         )
 
         self.subtitle_path = (
@@ -62,7 +61,7 @@ class IntroScreen(tk.Frame):
         )
 
         self.settings_path = (
-            self.root_path / "settings.json"
+            SETTINGS_FILE
         )
 
         self.locales_path = (

@@ -3,12 +3,13 @@ import json
 from pathlib import Path
 
 from core.mission import MissionState
+from core.paths import SAVE_FILE
 
 
 class SaveManager:
     def __init__(self):
-        project_root = Path(__file__).resolve().parent.parent
-        self.save_path = project_root / "save.json"
+        # o save fica na pasta do usuário (veja core/paths.py)
+        self.save_path = SAVE_FILE
 
     def save_game(self, engine, localization):
         data = {

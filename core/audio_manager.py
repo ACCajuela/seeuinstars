@@ -4,6 +4,8 @@ from pathlib import Path
 
 import pygame
 
+from core.paths import SETTINGS_FILE, audio_file
+
 
 class AudioManager:
     def __init__(self):
@@ -13,7 +15,8 @@ class AudioManager:
             self.project_root / "shared_assets" / "audio"
         )
 
-        self.settings_file = self.project_root / "settings.json"
+        # idioma e volume ficam na pasta do usuário (veja core/paths.py)
+        self.settings_file = SETTINGS_FILE
 
         # Configurações padrão
         self.enabled = True
@@ -134,7 +137,7 @@ class AudioManager:
         if not self.enabled:
             return
 
-        file_path = self.audio_path / filename
+        file_path = audio_file(self.audio_path, filename)
 
         if not file_path.exists():
             print(f"Audio file not found: {file_path}")
@@ -161,7 +164,7 @@ class AudioManager:
         Respeita as configurações de volume e áudio.
         """
 
-        file_path = self.audio_path / filename
+        file_path = audio_file(self.audio_path, filename)
 
         if not file_path.exists():
             print(f"Music file not found: {file_path}")
