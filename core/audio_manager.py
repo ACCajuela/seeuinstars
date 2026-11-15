@@ -26,8 +26,9 @@ class AudioManager:
         # Recupera as configurações salvas
         self.load_settings()
 
-        # Inicializa o sistema de áudio
-        pygame.mixer.init()
+        # Inicializa o sistema de áudio apenas se necessário
+        if not pygame.mixer.get_init():
+            pygame.mixer.init()
 
     # ========================================================
     # PERSISTÊNCIA
@@ -70,8 +71,7 @@ class AudioManager:
             print(f"Could not load audio settings: {error}")
 
     def save_settings(self):
-        # Lê as configurações existentes para preservar
-        # outras preferências, como o idioma.
+        # Preserva outras preferências, como idioma
         settings = {}
 
         if self.settings_file.exists():
@@ -90,7 +90,6 @@ class AudioManager:
                 print(f"Could not read settings: {error}")
                 return
 
-        # Atualiza somente as configurações de áudio.
         settings.update({
             "music_volume": self.music_volume,
             "effects_volume": self.effects_volume,
@@ -141,7 +140,6 @@ class AudioManager:
             print(f"Audio file not found: {file_path}")
             return
 
-        # Carrega o efeito apenas uma vez.
         if filename not in self.effects:
             self.effects[filename] = pygame.mixer.Sound(
                 str(file_path)
@@ -157,11 +155,20 @@ class AudioManager:
     # ========================================================
 
     def play_music(self, filename="background.wav"):
+        """
+        Inicia uma música em loop.
+
+        Respeita as configurações de volume e áudio.
+        """
+
         file_path = self.audio_path / filename
 
         if not file_path.exists():
             print(f"Music file not found: {file_path}")
             return
+
+        if not pygame.mixer.get_init():
+            pygame.mixer.init()
 
         pygame.mixer.music.load(str(file_path))
 
@@ -174,6 +181,29 @@ class AudioManager:
         # -1 = reprodução em loop
         pygame.mixer.music.play(-1)
 
+        print(f"[AUDIO] Playing music: {filename}")
+
+    def pause_music(self):
+        """
+        Pausa a música sem perder a posição.
+        """
+        if pygame.mixer.get_init():
+            pygame.mixer.music.pause()
+
+    def resume_music(self):
+        """
+        Retoma a música pausada.
+        """
+        if pygame.mixer.get_init():
+            pygame.mixer.music.unpause()
+
+    def stop_music(self):
+        """
+        Para somente a música de fundo.
+        """
+        if pygame.mixer.get_init():
+            pygame.mixer.music.stop()
+
     # ========================================================
     # CONTROLE DO VOLUME DA MÚSICA
     # ========================================================
@@ -184,11 +214,12 @@ class AudioManager:
             self.music_volume
         )
 
-        pygame.mixer.music.set_volume(
-            self.music_volume
-            if self.enabled
-            else 0
-        )
+        if pygame.mixer.get_init():
+            pygame.mixer.music.set_volume(
+                self.music_volume
+                if self.enabled
+                else 0
+            )
 
         self.save_settings()
 
@@ -216,6 +247,9 @@ class AudioManager:
     # ========================================================
 
     def stop_audio(self):
+        if not pygame.mixer.get_init():
+            return
+
         pygame.mixer.music.set_volume(0)
         pygame.mixer.stop()
 
@@ -225,6 +259,9 @@ class AudioManager:
 
     def set_enabled(self, enabled):
         self.enabled = bool(enabled)
+
+        if not pygame.mixer.get_init():
+            pygame.mixer.init()
 
         if self.enabled:
             pygame.mixer.music.set_volume(

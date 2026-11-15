@@ -1,0 +1,150 @@
+
+{
+  "chapter": 0,
+  "title_key": "chapter_00.title",
+  "start_scene": "humanity",
+  "scenes": {
+    "humanity": {
+      "dialogues": [
+        {
+          "speaker": "Narrator",
+          "text_key": "chapter_00.narrator_01"
+        },
+        {
+          "speaker": "Narrator",
+          "text_key": "chapter_00.narrator_02"
+        },
+        {
+          "speaker": "Narrator",
+          "text_key": "chapter_00.narrator_03"
+        },
+        {
+          "speaker": "Narrator",
+          "text_key": "chapter_00.narrator_04"
+        },
+        {
+          "speaker": "Narrator",
+          "text_key": "chapter_00.narrator_05"
+        },
+        {
+          "speaker": "Narrator",
+          "text_key": "chapter_00.narrator_06"
+        },
+        {
+          "speaker": "Narrator",
+          "text_key": "chapter_00.narrator_07"
+        },
+        {
+          "speaker": "Narrator",
+          "text_key": "chapter_00.narrator_08"
+        }
+      ],
+      "next_scene": "bedroom"
+    },
+    "bedroom": {
+      "dialogues": [
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_00.cosmo_01"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_00.ada_01"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_00.cosmo_02"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_00.ada_02"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_00.cosmo_03"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_00.ada_03"
+        },
+        {
+          "speaker": "Vera",
+          "text_key": "chapter_00.vera_01"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_00.ada_04"
+        },
+        {
+          "speaker": "Vera",
+          "text_key": "chapter_00.vera_02"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_00.ada_05"
+        },
+        {
+          "speaker": "Vera",
+          "text_key": "chapter_00.vera_03"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_00.ada_06"
+        },
+        {
+          "speaker": "Vera",
+          "text_key": "chapter_00.vera_04"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_00.ada_07"
+        },
+        {
+          "speaker": "Vera",
+          "text_key": "chapter_00.vera_05"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_00.ada_08"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_00.cosmo_04"
+        },
+        {
+          "speaker": "Vera",
+          "text_key": "chapter_00.vera_06"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_00.cosmo_05"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_00.ada_09"
+        }
+      ],
+      "next_scene": "assessment"
+    },
+    "assessment": {
+      "dialogues": [
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_00.cosmo_06"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_00.ada_10"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_00.cosmo_07"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_00.ada_11"
+        }
+      ]
+    }
+  }
+}

@@ -4,84 +4,264 @@ from pathlib import Path
 
 
 class StoryEngine:
-    def __init__(self):
-        project_root = Path(__file__).resolve().parent.parent
 
-        story_path = (
-            project_root / "chapters" / "chapter_01" / "story.json"
-        )
+    KNOWLEDGE_ASSESSMENT = "knowledge_assessment"
+    ORBITAL_LAUNCH = "orbital_launch"
 
-        puzzles_path = story_path.parent / "puzzles.json"
+    def __init__(self, chapter=0):
+        self.project_root = Path(__file__).resolve().parent.parent
 
-        # Load story
-        with open(story_path, "r", encoding="utf-8") as file:
-            self.story = json.load(file)
+        self.chapter = chapter
+        self.story = {}
+        self.puzzles = {}
 
-        # Load puzzles
-        with open(puzzles_path, "r", encoding="utf-8") as file:
-            self.puzzles = json.load(file)["puzzles"]
-
-        # Story state
-        self.scene = self.story["scenes"][self.story["start_scene"]]
+        self.scene = None
+        self.scene_id = None
         self.dialogue_index = 0
         self.choices = {}
 
-        # Puzzle state
         self.pending_puzzle = None
         self.completed_puzzles = set()
+        self.puzzle_results = {}
+
+        self.load_chapter(chapter)
+
+    # ========================================================
+    # CHAPTERS
+    # ========================================================
+
+    def chapter_folder(self, chapter):
+        return (
+            self.project_root
+            / "chapters"
+            / f"chapter_{chapter:02d}"
+        )
+
+    def chapter_exists(self, chapter):
+        return (
+            self.chapter_folder(chapter) / "story.json"
+        ).exists()
+
+    def load_chapter(self, chapter):
+        folder = self.chapter_folder(chapter)
+
+        story_path = folder / "story.json"
+        puzzles_path = folder / "puzzles.json"
+
+        if not story_path.exists():
+            raise FileNotFoundError(
+                f"Story file not found: {story_path}"
+            )
+
+        with open(
+            story_path,
+            "r",
+            encoding="utf-8"
+        ) as file:
+            self.story = json.load(file)
+
+        if puzzles_path.exists():
+            with open(
+                puzzles_path,
+                "r",
+                encoding="utf-8"
+            ) as file:
+                puzzle_data = json.load(file)
+
+            self.puzzles = puzzle_data.get("puzzles", {})
+        else:
+            self.puzzles = {}
+
+        self.chapter = chapter
+
+        # Chapter 0: standalone knowledge assessment.
+        if chapter == 0:
+            self.puzzles[self.KNOWLEDGE_ASSESSMENT] = {
+                "type": "knowledge_quiz",
+                "module": "puzzles.quiz_screen"
+            }
+
+            assessment = self.story["scenes"].get("assessment")
+
+            if assessment is not None:
+                assessment["puzzle"] = (
+                    self.KNOWLEDGE_ASSESSMENT
+                )
+
+        # Chapter 1: standalone orbital launch simulation.
+        if chapter == 1:
+            self.puzzles[self.ORBITAL_LAUNCH] = {
+                "type": "orbital_launch",
+                "module": "puzzles.orbital_launch_ui"
+            }
+
+            launch_scene = self.story["scenes"].get("launch")
+
+            if launch_scene is not None:
+                launch_scene["puzzle"] = (
+                    self.ORBITAL_LAUNCH
+                )
+
+        start_scene = self.story["start_scene"]
+
+        self.scene_id = start_scene
+        self.scene = self.story["scenes"][start_scene]
+
+        self.dialogue_index = 0
+        self.choices = {}
+        self.pending_puzzle = None
+        self.completed_puzzles = set()
+        self.puzzle_results = {}
+
+        print(f"[ENGINE] Chapter loaded: {chapter}")
+        print(f"[ENGINE] Start scene: {start_scene}")
+        print(f"[ENGINE] Puzzles loaded: {len(self.puzzles)}")
+
+    # ========================================================
+    # DIALOGUES
+    # ========================================================
 
     def next_dialogue(self):
-        dialogues = self.scene["dialogues"]
+        # A pending puzzle must be completed before
+        # advancing the story.
+        if self.pending_puzzle:
+            return {
+                "type": "puzzle",
+                "id": self.pending_puzzle
+            }
 
-        if self.dialogue_index >= len(dialogues):
+        dialogues = self.scene.get("dialogues", [])
 
-            puzzle_id = self.scene.get("puzzle")
+        if self.dialogue_index < len(dialogues):
+            dialogue = dialogues[self.dialogue_index]
+            self.dialogue_index += 1
+            return dialogue
 
-            # Block progression until puzzle is completed
-            if puzzle_id and puzzle_id not in self.completed_puzzles:
-                self.pending_puzzle = puzzle_id
+        puzzle_id = self.scene.get("puzzle")
 
-                return {
-                    "type": "puzzle",
-                    "id": puzzle_id
-                }
+        if (
+            puzzle_id
+            and puzzle_id not in self.completed_puzzles
+        ):
+            if puzzle_id not in self.puzzles:
+                raise KeyError(
+                    f"Puzzle not found: {puzzle_id}"
+                )
 
-            # Move to next scene
-            next_scene = self.scene.get("next_scene")
+            self.pending_puzzle = puzzle_id
 
-            if next_scene:
-                self.change_scene(next_scene)
-                return self.next_dialogue()
+            print(f"[ENGINE] Puzzle triggered: {puzzle_id}")
 
-            return None
+            return {
+                "type": "puzzle",
+                "id": puzzle_id
+            }
 
-        dialogue = dialogues[self.dialogue_index]
-        self.dialogue_index += 1
+        next_scene = self.scene.get("next_scene")
 
-        return dialogue
+        if next_scene:
+            self.change_scene(next_scene)
+            return self.next_dialogue()
+
+        # Chapter finished. Continue to the next chapter
+        # if its story file exists.
+        next_chapter = self.chapter + 1
+
+        if self.chapter_exists(next_chapter):
+            print(
+                f"[ENGINE] Chapter {self.chapter} completed."
+            )
+
+            self.load_chapter(next_chapter)
+            return self.next_dialogue()
+
+        print(
+            f"[ENGINE] End of available story: "
+            f"chapter {self.chapter}"
+        )
+
+        return None
+
+    # ========================================================
+    # CHOICES
+    # ========================================================
 
     def make_choice(self, choice_id):
         self.choices["route"] = choice_id
         self.change_scene(choice_id)
 
-        print(f"Choice registered: {choice_id}")
+        print(f"[ENGINE] Choice registered: {choice_id}")
+
+    # ========================================================
+    # SCENES
+    # ========================================================
 
     def change_scene(self, scene_id):
+        if scene_id not in self.story["scenes"]:
+            raise KeyError(
+                f"Scene not found: {scene_id}"
+            )
+
+        self.scene_id = scene_id
         self.scene = self.story["scenes"][scene_id]
+
         self.dialogue_index = 0
         self.pending_puzzle = None
 
+        print(f"[ENGINE] Scene changed: {scene_id}")
+
+    # ========================================================
+    # PUZZLES
+    # ========================================================
+
     def get_puzzle(self, puzzle_id):
+        if puzzle_id not in self.puzzles:
+            raise KeyError(
+                f"Puzzle not found: {puzzle_id}"
+            )
+
         return self.puzzles[puzzle_id]
+
+    def complete_puzzle(self, puzzle_id, result=None):
+        if puzzle_id not in self.puzzles:
+            raise KeyError(
+                f"Puzzle not found: {puzzle_id}"
+            )
+
+        self.completed_puzzles.add(puzzle_id)
+        self.pending_puzzle = None
+
+        if result is not None:
+            self.puzzle_results[puzzle_id] = result
+
+        print(f"[ENGINE] Puzzle completed: {puzzle_id}")
+
+        if result is not None:
+            print(f"[ENGINE] Result: {result}")
 
     def answer_puzzle(self, puzzle_id, option_index):
         puzzle = self.get_puzzle(puzzle_id)
-        option = puzzle["options"][option_index]
+
+        if puzzle.get("type") in (
+            "knowledge_quiz",
+            "orbital_launch"
+        ):
+            raise ValueError(
+                "This puzzle must be completed "
+                "through its dedicated interface."
+            )
+
+        options = puzzle.get("options", [])
+
+        if not 0 <= option_index < len(options):
+            raise IndexError(
+                f"Invalid option index: {option_index}"
+            )
+
+        option = options[option_index]
 
         if option["correct"]:
-            self.completed_puzzles.add(puzzle_id)
-            self.pending_puzzle = None
-
+            self.complete_puzzle(puzzle_id)
             return True, puzzle["success_key"]
 
         return False, puzzle["failure_key"]

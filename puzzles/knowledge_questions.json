@@ -1,0 +1,152 @@
+
+{
+  "title_key": "chapter_00.quiz_title",
+  "passing_score": 3,
+  "questions": [
+    {
+      "question": {
+        "en": "Why do astronauts aboard the International Space Station appear to float?",
+        "pt_BR": "Por que os astronautas a bordo da Estação Espacial Internacional parecem flutuar?"
+      },
+      "options": [
+        {
+          "en": "There is no gravity in space.",
+          "pt_BR": "Não existe gravidade no espaço."
+        },
+        {
+          "en": "They are in continuous free fall around Earth.",
+          "pt_BR": "Eles estão em queda livre contínua ao redor da Terra."
+        },
+        {
+          "en": "The station generates an anti-gravity field.",
+          "pt_BR": "A estação gera um campo antigravitacional."
+        },
+        {
+          "en": "Earth's atmosphere pushes them upward.",
+          "pt_BR": "A atmosfera terrestre os empurra para cima."
+        }
+      ],
+      "correct_index": 1,
+      "explanation": {
+        "en": "The station and its astronauts are continuously falling around Earth together. This is called orbital free fall.",
+        "pt_BR": "A estação e seus astronautas estão continuamente caindo ao redor da Terra. Isso é chamado de queda livre orbital."
+      }
+    },
+    {
+      "question": {
+        "en": "What causes the seasons on Earth?",
+        "pt_BR": "O que provoca as estações do ano na Terra?"
+      },
+      "options": [
+        {
+          "en": "Changes in Earth's distance from the Sun.",
+          "pt_BR": "Mudanças na distância entre a Terra e o Sol."
+        },
+        {
+          "en": "The Moon's gravitational pull.",
+          "pt_BR": "A atração gravitacional da Lua."
+        },
+        {
+          "en": "The tilt of Earth's rotational axis.",
+          "pt_BR": "A inclinação do eixo de rotação da Terra."
+        },
+        {
+          "en": "Changes in the Sun's temperature.",
+          "pt_BR": "Mudanças na temperatura do Sol."
+        }
+      ],
+      "correct_index": 2,
+      "explanation": {
+        "en": "Earth's axial tilt changes the angle and duration of sunlight throughout the year.",
+        "pt_BR": "A inclinação do eixo terrestre altera o ângulo de incidência e a duração da luz solar ao longo do ano."
+      }
+    },
+    {
+      "question": {
+        "en": "Why is Mars especially challenging for human explorers?",
+        "pt_BR": "Por que Marte representa um desafio tão grande para exploradores humanos?"
+      },
+      "options": [
+        {
+          "en": "Mars has no gravity.",
+          "pt_BR": "Marte não possui gravidade."
+        },
+        {
+          "en": "Mars has a thin atmosphere and extreme environmental conditions.",
+          "pt_BR": "Marte possui uma atmosfera rarefeita e condições ambientais extremas."
+        },
+        {
+          "en": "Mars is hotter than Venus.",
+          "pt_BR": "Marte é mais quente que Vênus."
+        },
+        {
+          "en": "Mars has no solid surface.",
+          "pt_BR": "Marte não possui superfície sólida."
+        }
+      ],
+      "correct_index": 1,
+      "explanation": {
+        "en": "Mars has a very thin atmosphere, low temperatures and significant radiation hazards.",
+        "pt_BR": "Marte possui uma atmosfera muito rarefeita, baixas temperaturas e riscos significativos associados à radiação."
+      }
+    },
+    {
+      "question": {
+        "en": "What happens to the gravitational force between two objects when their distance doubles?",
+        "pt_BR": "O que acontece com a força gravitacional entre dois objetos quando a distância entre eles dobra?"
+      },
+      "options": [
+        {
+          "en": "It doubles.",
+          "pt_BR": "Ela dobra."
+        },
+        {
+          "en": "It stays the same.",
+          "pt_BR": "Ela permanece igual."
+        },
+        {
+          "en": "It becomes four times stronger.",
+          "pt_BR": "Ela fica quatro vezes mais forte."
+        },
+        {
+          "en": "It becomes one quarter as strong.",
+          "pt_BR": "Ela passa a ter um quarto da intensidade."
+        }
+      ],
+      "correct_index": 3,
+      "explanation": {
+        "en": "Gravitational force follows the inverse-square law. Doubling the distance reduces the force to one quarter.",
+        "pt_BR": "A força gravitacional segue a lei do inverso do quadrado. Dobrar a distância reduz a força a um quarto."
+      }
+    },
+    {
+      "question": {
+        "en": "Why does a spacecraft need a heat shield when returning to Earth?",
+        "pt_BR": "Por que uma espaçonave precisa de um escudo térmico ao retornar à Terra?"
+      },
+      "options": [
+        {
+          "en": "To protect against intense heating during atmospheric entry.",
+          "pt_BR": "Para proteger contra o aquecimento intenso durante a entrada na atmosfera."
+        },
+        {
+          "en": "To prevent gravity from affecting the spacecraft.",
+          "pt_BR": "Para impedir que a gravidade afete a espaçonave."
+        },
+        {
+          "en": "To increase the spacecraft's speed.",
+          "pt_BR": "Para aumentar a velocidade da espaçonave."
+        },
+        {
+          "en": "To generate oxygen for the crew.",
+          "pt_BR": "Para produzir oxigênio para a tripulação."
+        }
+      ],
+      "correct_index": 0,
+      "explanation": {
+        "en": "Atmospheric entry produces intense heating as the spacecraft transfers energy to the surrounding air.",
+        "pt_BR": "A entrada atmosférica produz aquecimento intenso à medida que a espaçonave transfere energia para o ar ao seu redor."
+      }
+    }
+  ]
+}

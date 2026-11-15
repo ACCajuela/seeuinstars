@@ -2,13 +2,13 @@
 {
   "chapter": 1,
   "title_key": "chapter_01.title",
-  "start_scene": "intro",
+  "start_scene": "after_assessment",
   "scenes": {
-    "intro": {
+    "after_assessment": {
       "dialogues": [
         {
-          "speaker": "Ada",
-          "text_key": "chapter_01.ada_01"
+          "speaker": "Narrator",
+          "text_key": "chapter_01.narrator_01"
         },
         {
           "speaker": "COSMO",
@@ -16,65 +16,156 @@
         },
         {
           "speaker": "Ada",
-          "text_key": "chapter_01.ada_02"
+          "text_key": "chapter_01.ada_01"
         },
         {
           "speaker": "COSMO",
           "text_key": "chapter_01.cosmo_02"
         },
         {
+          "speaker": "Ada",
+          "text_key": "chapter_01.ada_02"
+        },
+        {
           "speaker": "COSMO",
-          "text_key": "chapter_01.cosmo_03",
-          "choices": [
-            {
-              "text_key": "chapter_01.choice_hangar",
-              "id": "hangar"
-            },
-            {
-              "text_key": "chapter_01.choice_control",
-              "id": "controle"
-            }
-          ]
+          "text_key": "chapter_01.cosmo_03"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_01.ada_03"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_01.cosmo_04"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_01.ada_04"
         }
-      ]
+      ],
+      "next_scene": "cargo_ship"
+    },
+    "cargo_ship": {
+      "dialogues": [
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_01.cosmo_05"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_01.ada_05"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_01.cosmo_06"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_01.ada_06"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_01.cosmo_07"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_01.ada_07"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_01.cosmo_08"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_01.ada_08"
+        }
+      ],
+      "next_scene": "hangar"
     },
     "hangar": {
       "dialogues": [
         {
-          "speaker": "Ada",
-          "text_key": "chapter_01.hangar_ada"
+          "speaker": "Narrator",
+          "text_key": "chapter_01.narrator_02"
         },
         {
           "speaker": "COSMO",
-          "text_key": "chapter_01.hangar_cosmo"
+          "text_key": "chapter_01.cosmo_09"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_01.ada_09"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_01.cosmo_10"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_01.ada_10"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_01.cosmo_11"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_01.ada_11"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_01.cosmo_12"
         }
       ],
-      "puzzle": "fuel_calculation",
-      "next_scene": "reuniao"
+      "next_scene": "launch"
     },
-    "controle": {
+    "launch": {
       "dialogues": [
         {
-          "speaker": "Ada",
-          "text_key": "chapter_01.control_ada"
+          "speaker": "Narrator",
+          "text_key": "chapter_01.narrator_03"
         },
         {
           "speaker": "COSMO",
-          "text_key": "chapter_01.control_cosmo"
+          "text_key": "chapter_01.cosmo_13"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_01.ada_12"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_01.cosmo_14"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_01.ada_13"
         }
       ],
-      "puzzle": "navigation",
-      "next_scene": "reuniao"
+      "puzzle": "orbital_launch",
+      "next_scene": "earth_orbit"
     },
-    "reuniao": {
+    "earth_orbit": {
       "dialogues": [
         {
-          "speaker": "Ada",
-          "text_key": "chapter_01.reunion_ada"
+          "speaker": "Narrator",
+          "text_key": "chapter_01.narrator_04"
         },
         {
           "speaker": "COSMO",
-          "text_key": "chapter_01.reunion_cosmo"
+          "text_key": "chapter_01.cosmo_15"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_01.ada_14"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_01.cosmo_16"
+        },
+        {
+          "speaker": "Ada",
+          "text_key": "chapter_01.ada_15"
         }
       ]
     }

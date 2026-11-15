@@ -12,8 +12,9 @@ from puzzles.radio_signal import RadioSignalPuzzle
 # ============================================================
 # ASTRA — Chapter 6: Radio Communication
 #
-# Animated radio transmission, Doppler tuning,
-# radio static and synthetic breathing.
+# Relativistic Doppler effect and light travel time.
+# The visual signal-quality indicator is educational,
+# not a physical model of interference or attenuation.
 # ============================================================
 
 WIDTH = 900
@@ -23,7 +24,6 @@ PANEL_WIDTH = 260
 
 BG = "#0B1425"
 PANEL = "#1D2B40"
-
 TEXT = "#F5F7FF"
 MUTED = "#AABBD3"
 
@@ -35,7 +35,7 @@ RED = "#FF9999"
 
 FRAME_MS = 30
 
-# One real second = two simulated minutes.
+# One real second represents two simulated minutes.
 SIMULATION_SPEED = 2.0
 
 AUDIO_DIRECTORY = (
@@ -51,7 +51,7 @@ class RadioSignalUI(tk.Frame):
         self,
         master,
         on_complete=None,
-        on_back=None
+        on_back=None,
     ):
         super().__init__(master, bg=BG)
 
@@ -66,27 +66,30 @@ class RadioSignalUI(tk.Frame):
 
         self.completed_notified = False
         self.message_unlocked = False
+        self.hint_level = 0
 
         self.frequency_var = tk.DoubleVar(
-            value=self.puzzle.get_state()[
-                "tuned_frequency"
-            ]
+            value=self.puzzle.get_state()["tuned_frequency"]
         )
 
         self.frequency_label_var = tk.StringVar()
         self.info_var = tk.StringVar()
 
         self.status_var = tk.StringVar(
-            value="Tune the receiver and start transmission."
+            value=(
+                "Ada, Vera's transmitter is moving away "
+                "from us. Its radio waves will reach our "
+                "receiver at a lower frequency. Tune the "
+                "receiver and wait for the signal to arrive."
+            )
         )
 
         self.setup_audio()
-
         self.build_ui()
+
         self.update_labels()
         self.update_info()
         self.draw_scene()
-
         self.animate()
 
     # ========================================================
@@ -112,17 +115,11 @@ class RadioSignalUI(tk.Frame):
             )
 
             self.static_sound = pygame.mixer.Sound(
-                str(
-                    AUDIO_DIRECTORY
-                    / "radio_static.wav"
-                )
+                str(AUDIO_DIRECTORY / "radio_static.wav")
             )
 
             self.breath_sound = pygame.mixer.Sound(
-                str(
-                    AUDIO_DIRECTORY
-                    / "radio_breathing.wav"
-                )
+                str(AUDIO_DIRECTORY / "radio_breathing.wav")
             )
 
             self.static_channel = pygame.mixer.Channel(2)
@@ -133,7 +130,7 @@ class RadioSignalUI(tk.Frame):
 
             self.static_channel.play(
                 self.static_sound,
-                loops=-1
+                loops=-1,
             )
 
             self.audio_available = True
@@ -141,7 +138,7 @@ class RadioSignalUI(tk.Frame):
         except (pygame.error, OSError) as error:
             print(
                 "[RadioSignalUI] Audio unavailable:",
-                error
+                error,
             )
 
     def update_audio(self):
@@ -153,25 +150,18 @@ class RadioSignalUI(tk.Frame):
         quality = self.get_signal_quality()
 
         if self.message_unlocked:
-
             self.static_channel.set_volume(0.025)
             self.breath_channel.set_volume(0.60)
 
         elif state["signal_arrived"]:
-
-            volume = (
-                0.20 * (1.0 - quality)
-                + 0.02
-            )
+            volume = 0.20 * (1.0 - quality) + 0.02
 
             self.static_channel.set_volume(
                 max(0.02, min(0.22, volume))
             )
-
             self.breath_channel.set_volume(0.0)
 
         else:
-
             self.static_channel.set_volume(0.20)
             self.breath_channel.set_volume(0.0)
 
@@ -181,12 +171,10 @@ class RadioSignalUI(tk.Frame):
             return
 
         if not self.breath_channel.get_busy():
-
             self.breath_channel.set_volume(0.60)
-
             self.breath_channel.play(
                 self.breath_sound,
-                loops=-1
+                loops=-1,
             )
 
     def stop_breathing(self):
@@ -206,7 +194,7 @@ class RadioSignalUI(tk.Frame):
         self.breath_channel.stop()
 
     # ========================================================
-    # UI
+    # Interface
     # ========================================================
 
     def build_ui(self):
@@ -216,52 +204,46 @@ class RadioSignalUI(tk.Frame):
             width=SCENE_WIDTH,
             height=HEIGHT,
             bg=BG,
-            highlightthickness=0
+            highlightthickness=0,
         )
-
         self.canvas.pack(
             side="left",
             fill="both",
-            expand=True
+            expand=True,
         )
 
         self.panel = tk.Frame(
             self,
             width=PANEL_WIDTH,
-            bg=PANEL
+            bg=PANEL,
         )
-
-        self.panel.pack(
-            side="right",
-            fill="y"
-        )
-
+        self.panel.pack(side="right", fill="y")
         self.panel.pack_propagate(False)
 
         tk.Label(
             self.panel,
             text="RADIO\nSIGNAL",
-            font=("Arial", 19, "bold"),
+            font=("Arial", 18, "bold"),
             fg=TEXT,
             bg=PANEL,
-            justify="center"
-        ).pack(pady=(23, 15))
+            justify="center",
+        ).pack(pady=(12, 8))
 
         tk.Label(
             self.panel,
             text="Receiver frequency",
             font=("Arial", 10),
             fg=MUTED,
-            bg=PANEL
+            bg=PANEL,
         ).pack()
 
         tk.Label(
             self.panel,
             textvariable=self.frequency_label_var,
-            font=("Arial", 15, "bold"),
+            font=("Arial", 14, "bold"),
             fg=CYAN,
-            bg=PANEL
-        ).pack(pady=6)
+            bg=PANEL,
+        ).pack(pady=3)
 
         self.frequency_slider = tk.Scale(
             self.panel,
@@ -276,96 +258,272 @@ class RadioSignalUI(tk.Frame):
             bg=PANEL,
             fg=TEXT,
             troughcolor="#465976",
-            highlightthickness=0
+            highlightthickness=0,
+        )
+        self.frequency_slider.pack(pady=(0, 8))
+
+        self.transmit_button = self.make_button(
+            "TRANSMIT",
+            self.start_transmission,
+            "#7356AE",
         )
 
-        self.frequency_slider.pack(
-            pady=(0, 15)
+        self.decode_button = self.make_button(
+            "DECODE",
+            self.decode_signal,
+            "#386A76",
         )
 
-        tk.Button(
-            self.panel,
-            text="TRANSMIT",
-            command=self.start_transmission,
-            font=("Arial", 11, "bold"),
-            bg="#7356AE",
-            fg=TEXT,
-            relief="flat"
-        ).pack(
-            fill="x",
-            padx=20,
-            pady=5,
-            ipady=8
+        self.make_button(
+            "COSMO HINT",
+            self.request_hint,
+            "#40536C",
         )
 
-        tk.Button(
-            self.panel,
-            text="DECODE",
-            command=self.decode_signal,
-            font=("Arial", 11, "bold"),
-            bg="#386A76",
-            fg=TEXT,
-            relief="flat"
-        ).pack(
-            fill="x",
-            padx=20,
-            pady=5,
-            ipady=8
-        )
-
-        tk.Button(
-            self.panel,
-            text="RESET",
-            command=self.reset_simulation,
-            font=("Arial", 10, "bold"),
-            bg="#435571",
-            fg=TEXT,
-            relief="flat"
-        ).pack(
-            fill="x",
-            padx=20,
-            pady=5,
-            ipady=7
+        self.make_button(
+            "RESET",
+            self.reset_simulation,
+            "#435571",
         )
 
         if self.on_back is not None:
-
-            tk.Button(
-                self.panel,
-                text="BACK",
-                command=self.go_back,
-                font=("Arial", 10),
-                bg=PANEL,
-                fg=MUTED,
-                relief="flat"
-            ).pack(pady=6)
+            self.make_button(
+                "BACK",
+                self.go_back,
+                PANEL,
+            )
 
         tk.Label(
             self.panel,
             textvariable=self.info_var,
-            font=("Arial", 10),
+            font=("Arial", 9),
             fg=MUTED,
             bg=PANEL,
             justify="left",
-            wraplength=220
+            wraplength=220,
         ).pack(
-            padx=20,
-            pady=(18, 10),
-            anchor="w"
+            padx=18,
+            pady=(9, 6),
+            anchor="w",
+        )
+
+        self.cosmo_frame = tk.Frame(
+            self.panel,
+            bg="#263750",
+            highlightbackground="#48617F",
+            highlightthickness=1,
+        )
+        self.cosmo_frame.pack(
+            fill="both",
+            expand=True,
+            padx=12,
+            pady=(3, 10),
         )
 
         tk.Label(
-            self.panel,
-            textvariable=self.status_var,
+            self.cosmo_frame,
+            text="✦ COSMO",
             font=("Arial", 10, "bold"),
             fg=GOLD,
-            bg=PANEL,
-            wraplength=220,
-            justify="center"
+            bg="#263750",
         ).pack(
-            padx=15,
-            pady=10
+            anchor="w",
+            padx=10,
+            pady=(8, 3),
         )
+
+        self.cosmo_label = tk.Label(
+            self.cosmo_frame,
+            textvariable=self.status_var,
+            font=("Arial", 9),
+            fg=TEXT,
+            bg="#263750",
+            justify="left",
+            anchor="nw",
+            wraplength=214,
+        )
+        self.cosmo_label.pack(
+            fill="both",
+            expand=True,
+            padx=10,
+            pady=(0, 8),
+        )
+
+    def make_button(self, text, command, background):
+
+        button = tk.Button(
+            self.panel,
+            text=text,
+            command=command,
+            font=("Arial", 10, "bold"),
+            bg=background,
+            fg=TEXT,
+            activebackground="#8A70D0",
+            activeforeground=TEXT,
+            relief="flat",
+            cursor="hand2",
+        )
+        button.pack(
+            fill="x",
+            padx=20,
+            pady=3,
+            ipady=5,
+        )
+        return button
+
+    # ========================================================
+    # COSMO — Scientific explanations and hints
+    # ========================================================
+
+    def say(self, message, color=TEXT):
+
+        self.status_var.set(message)
+        self.cosmo_label.config(fg=color)
+
+    def request_hint(self):
+
+        state = self.puzzle.get_state()
+
+        if self.message_unlocked:
+            self.say(
+                "We found Vera's signal, Ada! The "
+                "relativistic Doppler effect changes "
+                "the observed frequency when the "
+                "source and receiver move relative "
+                "to each other. Light still travels "
+                "at the speed of light.",
+                GREEN,
+            )
+            return
+
+        if state["running"]:
+            self.say(
+                "The signal is traveling toward us "
+                "at light speed. Radio waves are "
+                "electromagnetic waves, just like "
+                "visible light. Distance determines "
+                "how long they take to arrive.",
+                GOLD,
+            )
+            return
+
+        self.hint_level = min(
+            self.hint_level + 1,
+            4,
+        )
+
+        if self.hint_level == 1:
+            self.say(
+                "Think about a passing siren, Ada. "
+                "Its pitch changes as it moves "
+                "toward or away from you. Radio "
+                "waves experience a related effect "
+                "called the Doppler shift.",
+                GOLD,
+            )
+
+        elif self.hint_level == 2:
+            self.say(
+                "Vera's spacecraft is moving away "
+                "at 30% of the speed of light. "
+                "A receding source produces a "
+                "redshift: the received frequency "
+                "is lower than the emitted frequency.",
+                GOLD,
+            )
+
+        elif self.hint_level == 3:
+            self.say(
+                "The transmitter emits at 150 MHz. "
+                "Because Vera is moving away, tune "
+                "below 150 MHz. The relativistic "
+                "Doppler factor is the square root "
+                "of (1 - beta) / (1 + beta), "
+                "where beta is velocity divided by c.",
+                GOLD,
+            )
+
+        else:
+            self.advanced_hint(state)
+
+    def advanced_hint(self, state):
+
+        emitted = state["emitted_frequency"]
+        beta = state["source_velocity"]
+
+        factor = math.sqrt(
+            (1.0 - beta) / (1.0 + beta)
+        )
+
+        predicted = emitted * factor
+        tuned = state["tuned_frequency"]
+
+        if tuned < predicted - state["frequency_tolerance"]:
+            direction = "Increase the receiver frequency."
+        elif tuned > predicted + state["frequency_tolerance"]:
+            direction = "Decrease the receiver frequency."
+        else:
+            direction = (
+                "Your tuning is within the acceptable range!"
+            )
+
+        self.say(
+            f"Calculate 150 × sqrt(0.70 / 1.30). "
+            f"The Doppler factor is about {factor:.3f}, "
+            f"giving approximately {predicted:.1f} MHz. "
+            f"{direction} Then decode the received signal.",
+            GOLD,
+        )
+
+    def contextual_feedback(self, state):
+
+        status = state["status"]
+        tuned = state["tuned_frequency"]
+        received = state["received_frequency"]
+
+        if status == "signal_not_arrived":
+            self.say(
+                "Not yet, Ada! The transmission "
+                "has not reached our receiver. "
+                "The signal must cross "
+                f"{state['distance']:.1f} light-minutes "
+                "of space before we can decode it.",
+                GOLD,
+            )
+
+        elif status == "frequency_too_low":
+            self.say(
+                f"The receiver is tuned to "
+                f"{tuned:.1f} MHz, but the incoming "
+                "signal is at a higher frequency. "
+                "Increase the tuning slightly and "
+                "try decoding again.",
+                RED,
+            )
+
+        elif status == "frequency_too_high":
+            self.say(
+                f"The receiver is tuned to "
+                f"{tuned:.1f} MHz, above the "
+                "incoming signal's frequency. "
+                "Lower the tuning and try again. "
+                "Remember: Vera is moving away.",
+                RED,
+            )
+
+        elif status == "success":
+            self.say(
+                f"Signal recovered, Ada! Vera emitted "
+                f"at {state['emitted_frequency']:.1f} MHz, "
+                f"but we received it at {received:.1f} MHz "
+                "because her spacecraft is receding. "
+                f"The radio waves took "
+                f"{state['signal_delay']:.1f} minutes "
+                "to reach us in this model. "
+                "That's the relativistic Doppler effect "
+                "and light travel time working together!",
+                GREEN,
+            )
 
     # ========================================================
     # Controls
@@ -379,9 +537,12 @@ class RadioSignalUI(tk.Frame):
 
     def on_frequency_change(self, value):
 
+        if self.message_unlocked:
+            return
+
         self.puzzle.update({
             "type": "tune",
-            "frequency": float(value)
+            "frequency": float(value),
         })
 
         self.update_labels()
@@ -390,36 +551,45 @@ class RadioSignalUI(tk.Frame):
 
         state = self.puzzle.get_state()
 
-        if self.message_unlocked:
-            return
-
         if state["signal_arrived"]:
-
-            self.status_var.set(
-                "Receiver adjusted. Press DECODE."
+            self.say(
+                "Receiver adjusted. The signal is "
+                "already here, so you can press "
+                "DECODE again without retransmitting."
             )
-
         else:
-
-            self.status_var.set(
-                "Receiver frequency adjusted."
+            self.say(
+                "Receiver frequency adjusted. "
+                "Remember that the source's motion "
+                "changes the observed frequency."
             )
 
     def start_transmission(self):
 
+        if self.message_unlocked:
+            return
+
+        if self.puzzle.get_state()["running"]:
+            return
+
         self.stop_breathing()
 
-        self.message_unlocked = False
         self.completed_notified = False
 
         self.puzzle.update({
-            "type": "start"
+            "type": "start",
         })
 
         self.last_frame = time.monotonic()
 
-        self.status_var.set(
-            "Transmission traveling through space..."
+        self.transmit_button.config(state="disabled")
+
+        self.say(
+            "Transmission detected! The radio "
+            "waves are crossing space at light speed. "
+            "Even though Vera is moving, the signal "
+            "does not travel faster or slower than c.",
+            GOLD,
         )
 
         self.update_audio()
@@ -431,11 +601,10 @@ class RadioSignalUI(tk.Frame):
             return
 
         self.puzzle.update({
-            "type": "submit"
+            "type": "submit",
         })
 
         state = self.puzzle.get_state()
-
         self.handle_status(state)
 
     def reset_simulation(self):
@@ -445,16 +614,23 @@ class RadioSignalUI(tk.Frame):
         self.puzzle.reset()
 
         self.frequency_var.set(
-            self.puzzle.get_state()[
-                "tuned_frequency"
-            ]
+            self.puzzle.get_state()["tuned_frequency"]
         )
 
         self.message_unlocked = False
         self.completed_notified = False
+        self.hint_level = 0
 
-        self.status_var.set(
-            "Receiver reset. Awaiting transmission."
+        self.frequency_slider.config(state="normal")
+        self.transmit_button.config(state="normal")
+        self.decode_button.config(state="normal")
+
+        self.say(
+            "Receiver reset. Vera's transmitter "
+            "emits at 150 MHz, but she is moving "
+            "away from us. Find the shifted "
+            "frequency and recover her message.",
+            GOLD,
         )
 
         self.last_frame = time.monotonic()
@@ -466,12 +642,8 @@ class RadioSignalUI(tk.Frame):
 
     def go_back(self):
 
+        self.stop_animation()
         self.stop_audio()
-
-        if self.after_id is not None:
-
-            self.after_cancel(self.after_id)
-            self.after_id = None
 
         if self.on_back is not None:
             self.on_back()
@@ -495,7 +667,7 @@ class RadioSignalUI(tk.Frame):
         # UI-only indicator, not a physical noise model.
         return max(
             0.0,
-            1.0 - error / 20.0
+            1.0 - error / 20.0,
         )
 
     # ========================================================
@@ -533,7 +705,7 @@ class RadioSignalUI(tk.Frame):
                 x + size,
                 y + size,
                 fill="#53698B",
-                outline=""
+                outline="",
             )
 
     def draw_titles(self):
@@ -544,7 +716,7 @@ class RadioSignalUI(tk.Frame):
             text="CHAPTER 6 — RADIO COMMUNICATION",
             fill=TEXT,
             font=("Arial", 15, "bold"),
-            anchor="nw"
+            anchor="nw",
         )
 
         self.canvas.create_text(
@@ -553,7 +725,7 @@ class RadioSignalUI(tk.Frame):
             text="Relativistic Doppler effect",
             fill=MUTED,
             font=("Arial", 10),
-            anchor="nw"
+            anchor="nw",
         )
 
     def draw_ship_icon(
@@ -561,7 +733,7 @@ class RadioSignalUI(tk.Frame):
         x,
         y,
         color,
-        direction=1
+        direction=1,
     ):
 
         self.canvas.create_polygon(
@@ -575,7 +747,7 @@ class RadioSignalUI(tk.Frame):
             y + 15,
             fill=color,
             outline=TEXT,
-            width=1
+            width=1,
         )
 
         self.canvas.create_oval(
@@ -584,7 +756,7 @@ class RadioSignalUI(tk.Frame):
             x + 5,
             y + 5,
             fill="#FFFFFF",
-            outline=""
+            outline="",
         )
 
     def draw_spacecraft(self, state):
@@ -593,25 +765,23 @@ class RadioSignalUI(tk.Frame):
         receiver_x = 510
         y = 225
 
-        # Decorative motion. Not to physical scale.
-        motion = (
-            12 * math.sin(
-                self.animation_time * 0.7
-            )
+        # Decorative motion, not to physical scale.
+        motion = 12 * math.sin(
+            self.animation_time * 0.7
         )
 
         self.draw_ship_icon(
             source_x + motion,
             y,
             PURPLE,
-            direction=-1
+            direction=-1,
         )
 
         self.draw_ship_icon(
             receiver_x,
             y,
             CYAN,
-            direction=1
+            direction=1,
         )
 
         self.canvas.create_text(
@@ -619,7 +789,7 @@ class RadioSignalUI(tk.Frame):
             y + 40,
             text="VERA",
             fill=PURPLE,
-            font=("Arial", 12, "bold")
+            font=("Arial", 12, "bold"),
         )
 
         self.canvas.create_text(
@@ -627,7 +797,7 @@ class RadioSignalUI(tk.Frame):
             y + 40,
             text="ADA",
             fill=CYAN,
-            font=("Arial", 12, "bold")
+            font=("Arial", 12, "bold"),
         )
 
         self.canvas.create_text(
@@ -638,7 +808,7 @@ class RadioSignalUI(tk.Frame):
                 f"{state['source_velocity']:+.2f} c"
             ),
             fill=MUTED,
-            font=("Arial", 11)
+            font=("Arial", 11),
         )
 
     def draw_radio_waves(self, state):
@@ -668,7 +838,7 @@ class RadioSignalUI(tk.Frame):
             y,
             fill=GOLD,
             width=2,
-            dash=(5, 4)
+            dash=(5, 4),
         )
 
         for i in range(7):
@@ -699,7 +869,7 @@ class RadioSignalUI(tk.Frame):
                 extent=140,
                 style="arc",
                 outline=GOLD,
-                width=2
+                width=2,
             )
 
         if state["signal_arrived"]:
@@ -709,7 +879,7 @@ class RadioSignalUI(tk.Frame):
                 315,
                 text="SIGNAL RECEIVED",
                 fill=GREEN,
-                font=("Arial", 14, "bold")
+                font=("Arial", 14, "bold"),
             )
 
     def draw_signal_progress(self, state):
@@ -727,7 +897,7 @@ class RadioSignalUI(tk.Frame):
             right,
             bottom,
             fill="#263750",
-            outline=""
+            outline="",
         )
 
         self.canvas.create_rectangle(
@@ -736,7 +906,7 @@ class RadioSignalUI(tk.Frame):
             left + (right - left) * progress,
             bottom,
             fill=GOLD,
-            outline=""
+            outline="",
         )
 
         self.canvas.create_text(
@@ -747,7 +917,7 @@ class RadioSignalUI(tk.Frame):
                 f"{progress * 100:.0f}%"
             ),
             fill=MUTED,
-            font=("Arial", 11)
+            font=("Arial", 11),
         )
 
     def draw_receiver(self, state):
@@ -759,7 +929,7 @@ class RadioSignalUI(tk.Frame):
             445,
             text="RECEIVER SIGNAL QUALITY",
             fill=MUTED,
-            font=("Arial", 11, "bold")
+            font=("Arial", 11, "bold"),
         )
 
         left = 170
@@ -773,7 +943,7 @@ class RadioSignalUI(tk.Frame):
             right,
             bottom,
             fill="#263750",
-            outline=""
+            outline="",
         )
 
         color = (
@@ -788,7 +958,7 @@ class RadioSignalUI(tk.Frame):
             left + (right - left) * quality,
             bottom,
             fill=color,
-            outline=""
+            outline="",
         )
 
         self.canvas.create_text(
@@ -796,7 +966,7 @@ class RadioSignalUI(tk.Frame):
             515,
             text=f"{quality * 100:.1f}%",
             fill=color,
-            font=("Arial", 13, "bold")
+            font=("Arial", 13, "bold"),
         )
 
     def draw_message(self):
@@ -808,7 +978,7 @@ class RadioSignalUI(tk.Frame):
             555,
             fill="#192C3C",
             outline=GREEN,
-            width=2
+            width=2,
         )
 
         self.canvas.create_text(
@@ -816,7 +986,7 @@ class RadioSignalUI(tk.Frame):
             355,
             text="TRANSMISSION DECODED",
             fill=GREEN,
-            font=("Arial", 15, "bold")
+            font=("Arial", 15, "bold"),
         )
 
         self.canvas.create_text(
@@ -829,11 +999,11 @@ class RadioSignalUI(tk.Frame):
             fill=TEXT,
             font=("Arial", 14),
             justify="center",
-            width=450
+            width=450,
         )
 
     # ========================================================
-    # Status
+    # Status and completion
     # ========================================================
 
     def handle_status(self, state):
@@ -842,48 +1012,39 @@ class RadioSignalUI(tk.Frame):
 
         if status == "success":
 
+            if self.message_unlocked:
+                return
+
             self.message_unlocked = True
 
-            self.status_var.set(
-                "Transmission decoded successfully!"
-            )
+            self.frequency_slider.config(state="disabled")
+            self.transmit_button.config(state="disabled")
+            self.decode_button.config(state="disabled")
+
+            self.contextual_feedback(state)
 
             self.play_breathing()
             self.update_audio()
+            self.draw_scene()
 
             if (
                 not self.completed_notified
                 and self.on_complete is not None
             ):
-
                 self.completed_notified = True
+                self.after_idle(self.on_complete)
 
-                self.after_idle(
-                    self.on_complete
-                )
-
-        elif status == "signal_not_arrived":
-
-            self.status_var.set(
-                "The signal has not arrived yet."
-            )
-
-        elif status == "frequency_too_low":
-
-            self.status_var.set(
-                "Receiver frequency is too low."
-            )
-
-        elif status == "frequency_too_high":
-
-            self.status_var.set(
-                "Receiver frequency is too high."
-            )
+        elif status in (
+            "signal_not_arrived",
+            "frequency_too_low",
+            "frequency_too_high",
+        ):
+            self.contextual_feedback(state)
 
         else:
-
-            self.status_var.set(
-                f"Receiver status: {status}"
+            self.say(
+                f"Receiver status: {status}",
+                GOLD,
             )
 
     # ========================================================
@@ -895,8 +1056,8 @@ class RadioSignalUI(tk.Frame):
         now = time.monotonic()
 
         elapsed = min(
-            now - self.last_frame,
-            0.1
+            max(0.0, now - self.last_frame),
+            0.1,
         )
 
         self.last_frame = now
@@ -908,12 +1069,17 @@ class RadioSignalUI(tk.Frame):
 
             self.puzzle.update({
                 "type": "tick",
-                "dt": elapsed * SIMULATION_SPEED
+                "dt": elapsed * SIMULATION_SPEED,
             })
 
             state = self.puzzle.get_state()
 
             if not state["running"]:
+
+                self.transmit_button.config(state="normal")
+
+                # The backend automatically evaluates tuning
+                # when the transmission arrives.
                 self.handle_status(state)
 
         self.update_audio()
@@ -922,7 +1088,7 @@ class RadioSignalUI(tk.Frame):
 
         self.after_id = self.after(
             FRAME_MS,
-            self.animate
+            self.animate,
         )
 
     # ========================================================
@@ -948,16 +1114,20 @@ class RadioSignalUI(tk.Frame):
     # Cleanup
     # ========================================================
 
-    def destroy(self):
+    def stop_animation(self):
 
         if self.after_id is not None:
 
-            self.after_cancel(
-                self.after_id
-            )
+            try:
+                self.after_cancel(self.after_id)
+            except tk.TclError:
+                pass
 
             self.after_id = None
 
+    def destroy(self):
+
+        self.stop_animation()
         self.stop_audio()
 
         super().destroy()
@@ -970,22 +1140,14 @@ class RadioSignalUI(tk.Frame):
 if __name__ == "__main__":
 
     root = tk.Tk()
-
-    root.title(
-        "ASTRA — Radio Communication"
-    )
-
-    root.geometry(
-        f"{WIDTH}x{HEIGHT}"
-    )
-
+    root.title("ASTRA — Radio Communication")
+    root.geometry(f"{WIDTH}x{HEIGHT}")
     root.resizable(False, False)
 
     screen = RadioSignalUI(root)
-
     screen.pack(
         fill="both",
-        expand=True
+        expand=True,
     )
 
     root.mainloop()

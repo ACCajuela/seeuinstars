@@ -9,12 +9,9 @@ from puzzles.time_dilation import TimeDilationPuzzle
 # ============================================================
 # ASTRA — Chapter 5: Time Dilation
 #
-# Two animated clocks:
-# Earth coordinate time and spacecraft proper time.
-#
-# Educational model:
-# Constant relative velocity, no acceleration,
-# no gravitational time dilation.
+# Special relativity: idealized constant-velocity model.
+# Acceleration, turnaround effects and gravitational
+# time dilation are not included.
 # ============================================================
 
 WIDTH = 900
@@ -30,6 +27,7 @@ EARTH_COLOR = "#83B7FF"
 SHIP_COLOR = "#E6B5FF"
 ACCENT = "#F6CA78"
 SUCCESS = "#91E4AE"
+ERROR = "#FF9999"
 
 FRAME_MS = 30
 
@@ -39,12 +37,7 @@ SIMULATION_SPEED = 1.0
 
 class TimeDilationUI(tk.Frame):
 
-    def __init__(
-        self,
-        master,
-        on_complete=None,
-        on_back=None
-    ):
+    def __init__(self, master, on_complete=None, on_back=None):
         super().__init__(master, bg=BG)
 
         self.puzzle = TimeDilationPuzzle()
@@ -56,30 +49,35 @@ class TimeDilationUI(tk.Frame):
         self.last_frame = time.monotonic()
         self.completed_notified = False
 
+        self.hint_level = 0
+        self.attempts = 0
+
         state = self.puzzle.get_state()
 
         self.velocity_var = tk.DoubleVar(
             value=state["velocity"]
         )
-
         self.duration_var = tk.DoubleVar(
             value=state["duration"]
         )
 
         self.velocity_label_var = tk.StringVar()
         self.duration_label_var = tk.StringVar()
-
         self.info_var = tk.StringVar()
 
         self.status_var = tk.StringVar(
-            value="Configure the journey, then press START."
+            value=(
+                "Ada, let's investigate how motion "
+                "affects the passage of time. "
+                "Choose a velocity and journey duration, "
+                "then compare the two clocks!"
+            )
         )
 
         self.build_ui()
         self.update_labels()
         self.update_info()
         self.draw_scene()
-
         self.animate()
 
     # ========================================================
@@ -93,43 +91,37 @@ class TimeDilationUI(tk.Frame):
             width=SCENE_WIDTH,
             height=HEIGHT,
             bg=BG,
-            highlightthickness=0
+            highlightthickness=0,
         )
-
         self.canvas.pack(
             side="left",
             fill="both",
-            expand=True
+            expand=True,
         )
 
         self.panel = tk.Frame(
             self,
             width=WIDTH - SCENE_WIDTH,
-            bg=PANEL
+            bg=PANEL,
         )
-
-        self.panel.pack(
-            side="right",
-            fill="y"
-        )
-
+        self.panel.pack(side="right", fill="y")
         self.panel.pack_propagate(False)
 
         tk.Label(
             self.panel,
             text="TIME\nDILATION",
-            font=("Arial", 19, "bold"),
+            font=("Arial", 18, "bold"),
             fg=TEXT,
             bg=PANEL,
-            justify="center"
-        ).pack(pady=(23, 17))
+            justify="center",
+        ).pack(pady=(13, 8))
 
         tk.Label(
             self.panel,
             text="Spacecraft velocity",
             fg=MUTED,
             bg=PANEL,
-            font=("Arial", 10)
+            font=("Arial", 10),
         ).pack()
 
         tk.Label(
@@ -137,8 +129,8 @@ class TimeDilationUI(tk.Frame):
             textvariable=self.velocity_label_var,
             fg=SHIP_COLOR,
             bg=PANEL,
-            font=("Arial", 14, "bold")
-        ).pack(pady=4)
+            font=("Arial", 13, "bold"),
+        ).pack(pady=2)
 
         self.velocity_slider = tk.Scale(
             self.panel,
@@ -153,17 +145,16 @@ class TimeDilationUI(tk.Frame):
             bg=PANEL,
             fg=TEXT,
             troughcolor="#455774",
-            highlightthickness=0
+            highlightthickness=0,
         )
-
-        self.velocity_slider.pack(pady=(0, 14))
+        self.velocity_slider.pack(pady=(0, 8))
 
         tk.Label(
             self.panel,
             text="Earth journey duration",
             fg=MUTED,
             bg=PANEL,
-            font=("Arial", 10)
+            font=("Arial", 10),
         ).pack()
 
         tk.Label(
@@ -171,8 +162,8 @@ class TimeDilationUI(tk.Frame):
             textvariable=self.duration_label_var,
             fg=EARTH_COLOR,
             bg=PANEL,
-            font=("Arial", 14, "bold")
-        ).pack(pady=4)
+            font=("Arial", 13, "bold"),
+        ).pack(pady=2)
 
         self.duration_slider = tk.Scale(
             self.panel,
@@ -187,108 +178,292 @@ class TimeDilationUI(tk.Frame):
             bg=PANEL,
             fg=TEXT,
             troughcolor="#455774",
-            highlightthickness=0
+            highlightthickness=0,
+        )
+        self.duration_slider.pack(pady=(0, 8))
+
+        self.start_button = self.make_button(
+            "START",
+            self.start_simulation,
+            "#7056AC",
         )
 
-        self.duration_slider.pack(pady=(0, 14))
-
-        self.start_button = tk.Button(
-            self.panel,
-            text="START",
-            command=self.start_simulation,
-            font=("Arial", 11, "bold"),
-            bg="#7056AC",
-            fg=TEXT,
-            relief="flat"
+        self.make_button(
+            "COSMO HINT",
+            self.request_hint,
+            "#40536C",
         )
 
-        self.start_button.pack(
-            fill="x",
-            padx=20,
-            pady=(8, 5),
-            ipady=8
-        )
-
-        tk.Button(
-            self.panel,
-            text="RESET",
-            command=self.reset_simulation,
-            font=("Arial", 10, "bold"),
-            bg="#435571",
-            fg=TEXT,
-            relief="flat"
-        ).pack(
-            fill="x",
-            padx=20,
-            pady=5,
-            ipady=7
+        self.make_button(
+            "RESET",
+            self.reset_simulation,
+            "#435571",
         )
 
         if self.on_back is not None:
-
-            tk.Button(
-                self.panel,
-                text="BACK",
-                command=self.go_back,
-                font=("Arial", 10),
-                bg=PANEL,
-                fg=MUTED,
-                relief="flat"
-            ).pack(pady=6)
+            self.make_button(
+                "BACK",
+                self.go_back,
+                PANEL,
+            )
 
         tk.Label(
             self.panel,
             textvariable=self.info_var,
-            font=("Arial", 10),
+            font=("Arial", 9),
             fg=MUTED,
             bg=PANEL,
             justify="left",
-            wraplength=220
+            wraplength=220,
         ).pack(
             padx=20,
-            pady=(18, 8),
-            anchor="w"
+            pady=(10, 6),
+            anchor="w",
+        )
+
+        # COSMO message area.
+        self.cosmo_frame = tk.Frame(
+            self.panel,
+            bg="#263750",
+            highlightbackground="#48617F",
+            highlightthickness=1,
+        )
+        self.cosmo_frame.pack(
+            fill="x",
+            padx=12,
+            pady=(4, 8),
         )
 
         tk.Label(
-            self.panel,
-            textvariable=self.status_var,
+            self.cosmo_frame,
+            text="✦ COSMO",
             font=("Arial", 10, "bold"),
             fg=ACCENT,
-            bg=PANEL,
-            wraplength=220,
-            justify="center"
+            bg="#263750",
         ).pack(
-            padx=15,
-            pady=8
+            anchor="w",
+            padx=10,
+            pady=(8, 3),
         )
+
+        self.cosmo_label = tk.Label(
+            self.cosmo_frame,
+            textvariable=self.status_var,
+            font=("Arial", 9),
+            fg=TEXT,
+            bg="#263750",
+            justify="left",
+            wraplength=214,
+            anchor="nw",
+        )
+        self.cosmo_label.pack(
+            fill="x",
+            padx=10,
+            pady=(0, 9),
+        )
+
+    def make_button(self, text, command, background):
+        button = tk.Button(
+            self.panel,
+            text=text,
+            command=command,
+            font=("Arial", 10, "bold"),
+            bg=background,
+            fg=TEXT,
+            activebackground="#8A70D0",
+            activeforeground=TEXT,
+            relief="flat",
+            cursor="hand2",
+        )
+        button.pack(
+            fill="x",
+            padx=20,
+            pady=3,
+            ipady=5,
+        )
+        return button
+
+    # ========================================================
+    # COSMO — Educational guidance
+    # ========================================================
+
+    def say(self, message, color=TEXT):
+        self.status_var.set(message)
+        self.cosmo_label.config(fg=color)
+
+    def request_hint(self):
+
+        state = self.puzzle.get_state()
+
+        if state["completed"]:
+            self.say(
+                "Excellent work, Ada! The moving clock "
+                "accumulated less proper time than the "
+                "Earth-frame coordinate time. This is "
+                "a real prediction of special relativity!",
+                SUCCESS,
+            )
+            return
+
+        if state["running"]:
+            self.say(
+                "Watch the clocks carefully! The "
+                "spacecraft clock advances more slowly "
+                "relative to Earth's reference frame "
+                "when the spacecraft is moving.",
+                ACCENT,
+            )
+            return
+
+        self.hint_level = min(
+            self.hint_level + 1,
+            4,
+        )
+
+        if self.hint_level == 1:
+            self.say(
+                "Einstein's special relativity tells "
+                "us that elapsed time depends on the "
+                "path an observer takes through spacetime. "
+                "Compare the two clocks.",
+                ACCENT,
+            )
+
+        elif self.hint_level == 2:
+            self.say(
+                "The closer the spacecraft's speed "
+                "gets to the speed of light, the "
+                "larger the Lorentz factor becomes. "
+                "That increases the time difference.",
+                ACCENT,
+            )
+
+        elif self.hint_level == 3:
+            self.say(
+                "Duration matters too! A longer "
+                "journey allows the difference "
+                "between the clocks to accumulate. "
+                "Try balancing speed and duration.",
+                ACCENT,
+            )
+
+        else:
+            self.show_advanced_hint()
+
+    def show_advanced_hint(self):
+
+        state = self.puzzle.get_state()
+
+        difference = state["time_difference"]
+        target = state["target_difference"]
+        tolerance = state["target_tolerance"]
+
+        if difference < target - tolerance:
+            self.say(
+                f"The predicted difference is "
+                f"{difference:.2f} years, below the "
+                f"{target:.2f}-year target. Increase "
+                "velocity or journey duration.",
+                ACCENT,
+            )
+
+        elif difference > target + tolerance:
+            self.say(
+                f"The predicted difference is "
+                f"{difference:.2f} years, above the "
+                f"{target:.2f}-year target. Reduce "
+                "velocity or journey duration.",
+                ACCENT,
+            )
+
+        else:
+            self.say(
+                f"Your predicted difference is "
+                f"{difference:.2f} years, within "
+                "the target tolerance. Start the "
+                "journey to test your configuration!",
+                ACCENT,
+            )
+
+    def contextual_feedback(self, state):
+
+        status = state["status"]
+        difference = (
+            state["elapsed_earth_time"]
+            - state["elapsed_ship_time"]
+        )
+
+        target = state["target_difference"]
+
+        if status == "success":
+            self.say(
+                f"Mission accomplished, Ada! Earth "
+                f"experienced {state['elapsed_earth_time']:.2f} "
+                f"years, while the spacecraft experienced "
+                f"{state['elapsed_ship_time']:.2f} years. "
+                f"The difference is {difference:.2f} years! "
+                "The spacecraft clock measured less "
+                "proper time along its path.",
+                SUCCESS,
+            )
+
+        elif status == "insufficient_dilation":
+            self.say(
+                f"The clocks differ by only "
+                f"{difference:.2f} years. We need "
+                f"about {target:.2f} years. "
+                "Try increasing the spacecraft's "
+                "speed or extending the journey.",
+                ERROR,
+            )
+
+        elif status == "excessive_dilation":
+            self.say(
+                f"The clocks differ by "
+                f"{difference:.2f} years, which "
+                f"exceeds our {target:.2f}-year target. "
+                "Try reducing the velocity or "
+                "shortening the journey.",
+                ERROR,
+            )
+
+        else:
+            self.say(
+                "The journey has ended. Review "
+                "the clock readings and adjust "
+                "your configuration.",
+                ACCENT,
+            )
 
     # ========================================================
     # Controls
     # ========================================================
 
     def update_labels(self):
-
         self.velocity_label_var.set(
             f"{self.velocity_var.get():.2f} c"
         )
-
         self.duration_label_var.set(
             f"{self.duration_var.get():.1f} years"
         )
 
     def on_velocity_change(self, value):
 
+        if self.puzzle.get_state()["running"]:
+            return
+
         self.puzzle.update({
             "type": "adjust",
             "parameter": "velocity",
-            "value": float(value)
+            "value": float(value),
         })
 
         self.completed_notified = False
 
-        self.status_var.set(
-            "Velocity adjusted."
+        self.say(
+            "Velocity adjusted. The Lorentz factor "
+            "has changed. Check the predicted "
+            "difference between the clocks."
         )
 
         self.update_labels()
@@ -296,16 +471,21 @@ class TimeDilationUI(tk.Frame):
 
     def on_duration_change(self, value):
 
+        if self.puzzle.get_state()["running"]:
+            return
+
         self.puzzle.update({
             "type": "adjust",
             "parameter": "duration",
-            "value": float(value)
+            "value": float(value),
         })
 
         self.completed_notified = False
 
-        self.status_var.set(
-            "Journey duration adjusted."
+        self.say(
+            "Journey duration adjusted. The time "
+            "difference accumulates over the "
+            "duration of the trip."
         )
 
         self.update_labels()
@@ -317,25 +497,20 @@ class TimeDilationUI(tk.Frame):
             return
 
         self.puzzle.update({
-            "type": "start"
+            "type": "start",
         })
 
         self.completed_notified = False
 
-        self.velocity_slider.config(
-            state="disabled"
-        )
+        self.velocity_slider.config(state="disabled")
+        self.duration_slider.config(state="disabled")
+        self.start_button.config(state="disabled")
 
-        self.duration_slider.config(
-            state="disabled"
-        )
-
-        self.start_button.config(
-            state="disabled"
-        )
-
-        self.status_var.set(
-            "Journey in progress..."
+        self.say(
+            "Journey started! Watch how the "
+            "spacecraft clock accumulates time "
+            "differently from Earth's clock.",
+            ACCENT,
         )
 
         self.last_frame = time.monotonic()
@@ -343,33 +518,23 @@ class TimeDilationUI(tk.Frame):
     def reset_simulation(self):
 
         self.puzzle.reset()
-
         state = self.puzzle.get_state()
 
-        self.velocity_var.set(
-            state["velocity"]
-        )
+        self.velocity_var.set(state["velocity"])
+        self.duration_var.set(state["duration"])
 
-        self.duration_var.set(
-            state["duration"]
-        )
-
-        self.velocity_slider.config(
-            state="normal"
-        )
-
-        self.duration_slider.config(
-            state="normal"
-        )
-
-        self.start_button.config(
-            state="normal"
-        )
+        self.velocity_slider.config(state="normal")
+        self.duration_slider.config(state="normal")
+        self.start_button.config(state="normal")
 
         self.completed_notified = False
+        self.hint_level = 0
 
-        self.status_var.set(
-            "Clocks synchronized."
+        self.say(
+            "Clocks synchronized! Both begin at "
+            "zero. Configure a new journey and "
+            "explore how velocity changes elapsed time.",
+            ACCENT,
         )
 
         self.last_frame = time.monotonic()
@@ -379,17 +544,19 @@ class TimeDilationUI(tk.Frame):
         self.draw_scene()
 
     def go_back(self):
-
-        if self.after_id is not None:
-
-            self.after_cancel(
-                self.after_id
-            )
-
-            self.after_id = None
+        self.stop_animation()
 
         if self.on_back is not None:
             self.on_back()
+
+    def stop_animation(self):
+        if self.after_id is not None:
+            try:
+                self.after_cancel(self.after_id)
+            except tk.TclError:
+                pass
+
+            self.after_id = None
 
     # ========================================================
     # Clock drawing
@@ -402,28 +569,30 @@ class TimeDilationUI(tk.Frame):
         radius,
         elapsed_years,
         color,
-        title
+        title,
     ):
 
-        self.canvas.create_text(
+        c = self.canvas
+
+        c.create_text(
             cx,
             cy - radius - 45,
             text=title,
             fill=color,
-            font=("Arial", 17, "bold")
+            font=("Arial", 17, "bold"),
         )
 
-        self.canvas.create_oval(
+        c.create_oval(
             cx - radius,
             cy - radius,
             cx + radius,
             cy + radius,
             fill="#16233B",
             outline=color,
-            width=4
+            width=4,
         )
 
-        # Clock markers.
+        # Clock markers
         for hour in range(12):
 
             angle = (
@@ -440,16 +609,14 @@ class TimeDilationUI(tk.Frame):
             x2 = cx + outer * math.cos(angle)
             y2 = cy + outer * math.sin(angle)
 
-            self.canvas.create_line(
-                x1,
-                y1,
-                x2,
-                y2,
+            c.create_line(
+                x1, y1,
+                x2, y2,
                 fill=MUTED,
-                width=2
+                width=2,
             )
 
-        # One full revolution represents one year.
+        # One revolution represents one year.
         angle = (
             2 * math.pi * elapsed_years
             - math.pi / 2
@@ -457,40 +624,31 @@ class TimeDilationUI(tk.Frame):
 
         hand_length = radius * 0.65
 
-        hx = (
-            cx
-            + hand_length * math.cos(angle)
-        )
+        hx = cx + hand_length * math.cos(angle)
+        hy = cy + hand_length * math.sin(angle)
 
-        hy = (
-            cy
-            + hand_length * math.sin(angle)
-        )
-
-        self.canvas.create_line(
-            cx,
-            cy,
-            hx,
-            hy,
+        c.create_line(
+            cx, cy,
+            hx, hy,
             fill=color,
-            width=4
+            width=4,
         )
 
-        self.canvas.create_oval(
+        c.create_oval(
             cx - 5,
             cy - 5,
             cx + 5,
             cy + 5,
             fill=TEXT,
-            outline=""
+            outline="",
         )
 
-        self.canvas.create_text(
+        c.create_text(
             cx,
             cy + radius + 28,
             text=f"{elapsed_years:.2f} years",
             fill=TEXT,
-            font=("Arial", 15, "bold")
+            font=("Arial", 15, "bold"),
         )
 
     # ========================================================
@@ -506,30 +664,23 @@ class TimeDilationUI(tk.Frame):
         self.draw_background()
 
         self.canvas.create_text(
-            20,
-            20,
+            20, 20,
             text="CHAPTER 5 — TIME DILATION",
             fill=TEXT,
             font=("Arial", 15, "bold"),
-            anchor="nw"
+            anchor="nw",
         )
 
         self.canvas.create_text(
-            20,
-            50,
+            20, 50,
             text="Two clocks, different elapsed times",
             fill=MUTED,
             font=("Arial", 10),
-            anchor="nw"
+            anchor="nw",
         )
 
-        earth_time = state[
-            "elapsed_earth_time"
-        ]
-
-        ship_time = state[
-            "elapsed_ship_time"
-        ]
+        earth_time = state["elapsed_earth_time"]
+        ship_time = state["elapsed_ship_time"]
 
         self.draw_clock(
             cx=175,
@@ -537,7 +688,7 @@ class TimeDilationUI(tk.Frame):
             radius=100,
             elapsed_years=earth_time,
             color=EARTH_COLOR,
-            title="EARTH"
+            title="EARTH",
         )
 
         self.draw_clock(
@@ -546,12 +697,12 @@ class TimeDilationUI(tk.Frame):
             radius=100,
             elapsed_years=ship_time,
             color=SHIP_COLOR,
-            title="SPACECRAFT"
+            title="SPACECRAFT",
         )
 
         self.draw_comparison(
             earth_time,
-            ship_time
+            ship_time,
         )
 
         self.canvas.create_text(
@@ -563,48 +714,36 @@ class TimeDilationUI(tk.Frame):
             ),
             fill=MUTED,
             font=("Arial", 9),
-            anchor="nw"
+            anchor="nw",
         )
 
     def draw_background(self):
 
         for i in range(75):
 
-            x = (
-                i * 97 + 31
-            ) % SCENE_WIDTH
-
-            y = (
-                i * 151 + 47
-            ) % HEIGHT
+            x = (i * 97 + 31) % SCENE_WIDTH
+            y = (i * 151 + 47) % HEIGHT
 
             size = 1 if i % 5 else 2
 
             self.canvas.create_oval(
-                x,
-                y,
+                x, y,
                 x + size,
                 y + size,
                 fill="#536A8D",
-                outline=""
+                outline="",
             )
 
-    def draw_comparison(
-        self,
-        earth_time,
-        ship_time
-    ):
+    def draw_comparison(self, earth_time, ship_time):
 
-        difference = (
-            earth_time - ship_time
-        )
+        difference = earth_time - ship_time
 
         self.canvas.create_text(
             SCENE_WIDTH / 2,
             420,
             text="TIME DIFFERENCE",
             fill=MUTED,
-            font=("Arial", 12, "bold")
+            font=("Arial", 12, "bold"),
         )
 
         self.canvas.create_text(
@@ -612,17 +751,14 @@ class TimeDilationUI(tk.Frame):
             455,
             text=f"{difference:.3f} years",
             fill=ACCENT,
-            font=("Arial", 24, "bold")
+            font=("Arial", 24, "bold"),
         )
 
-        # Progress towards the target difference.
-        target = (
-            self.puzzle.TARGET_DIFFERENCE
-        )
+        target = self.puzzle.TARGET_DIFFERENCE
 
         progress = min(
             1.0,
-            difference / target
+            max(0.0, difference / target),
         )
 
         left = 130
@@ -631,21 +767,18 @@ class TimeDilationUI(tk.Frame):
         bottom = 510
 
         self.canvas.create_rectangle(
-            left,
-            top,
-            right,
-            bottom,
+            left, top,
+            right, bottom,
             fill="#28384F",
-            outline=""
+            outline="",
         )
 
         self.canvas.create_rectangle(
-            left,
-            top,
+            left, top,
             left + (right - left) * progress,
             bottom,
             fill=SHIP_COLOR,
-            outline=""
+            outline="",
         )
 
         self.canvas.create_text(
@@ -656,7 +789,7 @@ class TimeDilationUI(tk.Frame):
                 f"(±{self.puzzle.TARGET_TOLERANCE:.2f})"
             ),
             fill=MUTED,
-            font=("Arial", 10)
+            font=("Arial", 10),
         )
 
     # ========================================================
@@ -668,8 +801,8 @@ class TimeDilationUI(tk.Frame):
         now = time.monotonic()
 
         elapsed = min(
-            now - self.last_frame,
-            0.1
+            max(0.0, now - self.last_frame),
+            0.1,
         )
 
         self.last_frame = now
@@ -680,7 +813,7 @@ class TimeDilationUI(tk.Frame):
 
             self.puzzle.update({
                 "type": "tick",
-                "dt": elapsed * SIMULATION_SPEED
+                "dt": elapsed * SIMULATION_SPEED,
             })
 
             state = self.puzzle.get_state()
@@ -693,59 +826,24 @@ class TimeDilationUI(tk.Frame):
 
         self.after_id = self.after(
             FRAME_MS,
-            self.animate
+            self.animate,
         )
 
     def finish_simulation(self, state):
 
-        self.velocity_slider.config(
-            state="normal"
-        )
+        self.velocity_slider.config(state="normal")
+        self.duration_slider.config(state="normal")
+        self.start_button.config(state="normal")
 
-        self.duration_slider.config(
-            state="normal"
-        )
+        self.contextual_feedback(state)
 
-        self.start_button.config(
-            state="normal"
-        )
-
-        status = state["status"]
-
-        if status == "success":
-
-            self.status_var.set(
-                "Success! Target time difference reached."
-            )
-
-            if (
-                not self.completed_notified
-                and self.on_complete is not None
-            ):
-
-                self.completed_notified = True
-
-                self.after_idle(
-                    self.on_complete
-                )
-
-        elif status == "insufficient_dilation":
-
-            self.status_var.set(
-                "Time difference is too small."
-            )
-
-        elif status == "excessive_dilation":
-
-            self.status_var.set(
-                "Time difference is too large."
-            )
-
-        else:
-
-            self.status_var.set(
-                f"Simulation ended: {status}"
-            )
+        if (
+            state["completed"]
+            and not self.completed_notified
+            and self.on_complete is not None
+        ):
+            self.completed_notified = True
+            self.after_idle(self.on_complete)
 
     # ========================================================
     # Information
@@ -770,41 +868,18 @@ class TimeDilationUI(tk.Frame):
     # ========================================================
 
     def destroy(self):
-
-        if self.after_id is not None:
-
-            self.after_cancel(
-                self.after_id
-            )
-
-            self.after_id = None
-
+        self.stop_animation()
         super().destroy()
 
-
-# ============================================================
-# Standalone test
-# ============================================================
 
 if __name__ == "__main__":
 
     root = tk.Tk()
-
-    root.title(
-        "ASTRA — Time Dilation"
-    )
-
-    root.geometry(
-        f"{WIDTH}x{HEIGHT}"
-    )
-
+    root.title("ASTRA — Time Dilation")
+    root.geometry(f"{WIDTH}x{HEIGHT}")
     root.resizable(False, False)
 
     screen = TimeDilationUI(root)
-
-    screen.pack(
-        fill="both",
-        expand=True
-    )
+    screen.pack(fill="both", expand=True)
 
     root.mainloop()
