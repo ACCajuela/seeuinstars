@@ -15,6 +15,7 @@ class StoryEngine:
     STANDALONE_PUZZLES = {
         "orbital_launch": "puzzles.orbital_launch_ui",
         "mars_gravity": "puzzles.mars_gravity_ui",
+        "mission_report": "screens.mission_report",
     }
 
     def __init__(self, chapter=0):
@@ -270,6 +271,8 @@ class StoryEngine:
             # Consequências do minigame nos recursos da nave,
             # ex.: {"effects": {"energy": -1, "oxygen": +2}}
             self.mission.apply_effects(result.get("effects"))
+            if "effects" in result:
+                self.mission.record_minigame(puzzle_id, result["effects"])
 
         print(f"[ENGINE] Puzzle completed: {puzzle_id}")
 

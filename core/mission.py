@@ -213,6 +213,7 @@ class MissionState:
         self.science = 0          # cartas de pesquisa coletadas
         self.messages = []        # mensagens para a Terra ainda sem resposta
         self.history = []         # relatório de cada dia (para o final)
+        self.minigames = {}       # consequências de cada minigame (idem)
 
     # --------------------------------------------------------
     # Energia que entra por dia
@@ -347,6 +348,13 @@ class MissionState:
         self.history.append({
             "leg": self.leg, "day": self.day, "actions": list(actions),
             "storm": storm, "state": self.snapshot(),
+            # o que aconteceu no dia (sem repetir os dados da tempestade)
+            "report": [
+                {"key": item["key"], "tone": item["tone"],
+                 "params": {k: v for k, v in item["params"].items()
+                            if k != "storm"}}
+                for item in report
+            ],
         })
         return report
 
@@ -378,6 +386,10 @@ class MissionState:
         for field, delta in (effects or {}).items():
             self._change(field, delta)
 
+    def record_minigame(self, puzzle_id, effects):
+        """Guarda as consequências de um minigame para o relatório final."""
+        self.minigames[puzzle_id] = dict(effects or {})
+
     def _change(self, field, delta):
         limits = {
             "energy": (0, MAX_ENERGY),
@@ -400,7 +412,7 @@ class MissionState:
 
     FIELDS = ("energy", "oxygen", "shield", "dose", "reserve_tanks", "crew",
               "location", "rtg_online", "leg", "day", "days_left", "science",
-              "messages", "history")
+              "messages", "history", "minigames")
 
     def snapshot(self):
         return {"energy": self.energy, "oxygen": self.oxygen,
