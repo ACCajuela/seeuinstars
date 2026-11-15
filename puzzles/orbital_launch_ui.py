@@ -33,6 +33,11 @@ SCENE_WIDTH = 680
 
 EARTH_IMAGE = IMAGES_DIR / "terra.png"
 
+# Consequência na nave: cada lançamento que não dá certo precisa de uma
+# queima de correção dos motores e gasta energia (até este limite).
+FAILED_LAUNCH_ENERGY = 1
+MAX_FUEL_PENALTY = 3
+
 SPACE_BG = "#0A1120"
 STAR_COLORS = ("#FFFFFF", "#CBD5E1", "#8BD3FF", "#64748B")
 EARTH_OCEAN = "#2F6FAE"
@@ -122,6 +127,10 @@ TRANSLATIONS = {
         "simulation_reset": (
             "All set again. Pick a speed and launch. You can ask me for a hint!"
         ),
+        "attempt_cost": "This try needed a correction burn: -1 energy.",
+        "fuel_perfect": "First try! We saved all our energy for the trip.",
+        "fuel_summary": "The correction burns used {spent} energy.",
+        "continue": "CONTINUE",
     },
 
     "pt_BR": {
@@ -198,6 +207,10 @@ TRANSLATIONS = {
         "simulation_reset": (
             "Tudo pronto de novo. Escolha a velocidade e lance. Se quiser, peça uma dica!"
         ),
+        "attempt_cost": "Essa tentativa precisou de uma queima de correção: -1 de energia.",
+        "fuel_perfect": "De primeira! Guardamos toda a energia para a viagem.",
+        "fuel_summary": "As queimas de correção gastaram {spent} de energia.",
+        "continue": "CONTINUAR",
     },
 }
 
@@ -238,6 +251,8 @@ class OrbitalLaunchUI(tk.Frame):
         # COSMO state
         self.hint_level = 0
         self.attempts = 0
+        self.failed_attempts = 0
+        self.continue_button = None
         self.last_result = None
 
         # Start away from the exact answer.
@@ -514,12 +529,37 @@ class OrbitalLaunchUI(tk.Frame):
                 self.say(self.tr("elliptical_other"))
 
         elif status == "stable_orbit":
-            self.say(self.tr("stable_orbit"))
+            spent = self.fuel_spent()
+            summary = (
+                self.tr("fuel_summary", spent=spent)
+                if spent else self.tr("fuel_perfect")
+            )
+            self.say(self.tr("stable_orbit") + " " + summary)
 
         else:
             self.say(self.tr("simulation_complete"))
 
         self.last_result = status
+
+        # Tentativa que não deu órbita: avisa o custo
+        if status != "stable_orbit":
+            self.failed_attempts += 1
+            if self.failed_attempts <= MAX_FUEL_PENALTY:
+                self.say(
+                    self.status_var.get().replace("COSMO: ", "")
+                    + " " + self.tr("attempt_cost")
+                )
+
+    # ========================================================
+    # CONSEQUÊNCIAS NA NAVE
+    # ========================================================
+
+    def fuel_spent(self):
+        return min(self.failed_attempts, MAX_FUEL_PENALTY) * FAILED_LAUNCH_ENERGY
+
+    def mission_effects(self):
+        """O que este minigame muda nos recursos da nave."""
+        return {"energy": -self.fuel_spent()}
 
     # ========================================================
     # CONTROLS
@@ -669,9 +709,23 @@ class OrbitalLaunchUI(tk.Frame):
             and not self.completed_notified
         ):
             self.completed_notified = True
+            self.velocity_slider.config(state="disabled")
+            self.start_button.config(state="disabled")
+            self._show_continue()
 
-            if self.on_complete is not None:
-                self.after_idle(self.on_complete)
+    def _show_continue(self):
+        if self.continue_button is not None:
+            return
+        x0, y0, x1, y1 = MINIGAME_PANEL
+        self.continue_button = MenuButton(
+            self.canvas, (x0 + x1) / 2, 245, self.tr("continue"),
+            self._complete, width=164, height=44, font_size=13,
+            primary=True,
+        )
+
+    def _complete(self):
+        if self.on_complete is not None:
+            self.on_complete()
 
     # ========================================================
     # RENDERING

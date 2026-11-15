@@ -54,6 +54,12 @@ class MarsGravityUI(tk.Frame):
     # Sobe o mundo na tela para a Ada não ficar atrás do COSMO
     WORLD_OFFSET_Y = -12
 
+    # Consequência na nave: o traje tem pouco oxigênio. Ele gasta com o
+    # tempo e cada queda gasta mais (a Ada se esforça para subir de novo).
+    SUIT_O2_PER_SECOND = 0.6     # % por segundo
+    SUIT_O2_PER_FALL = 12        # % por queda
+    SUIT_LOW = 30                # abaixo disso, o COSMO avisa
+
     TEXTS = {
         "pt_BR": {
             "title": "GRAVIDADE MARCIANA",
@@ -118,6 +124,10 @@ class MarsGravityUI(tk.Frame):
             "trajectory": "CAMINHO DO PULO",
             "legend": "Linha tracejada: pulo reto para cima, sem andar",
             "telemetry": "TELEMETRIA",
+            "suit_o2": "Oxigênio do traje",
+            "suit_refill": "O oxigênio do traje acabou! Troquei o cilindro, mas isso gastou oxigênio da nave.",
+            "suit_low": "Cuidado: o oxigênio do traje está acabando. Cada queda gasta mais!",
+            "o2_cost": "Para recarregar o traje, a nave gastou {value} de oxigênio.",
         },
         "en": {
             "title": "MARTIAN GRAVITY",
@@ -182,6 +192,10 @@ class MarsGravityUI(tk.Frame):
             "trajectory": "JUMP PATH",
             "legend": "Dashed line: jumping straight up, without walking",
             "telemetry": "TELEMETRY",
+            "suit_o2": "Suit oxygen",
+            "suit_refill": "The suit ran out of oxygen! I swapped the tank, but that used the ship's oxygen.",
+            "suit_low": "Careful: the suit is running low on oxygen. Every fall uses more!",
+            "o2_cost": "To refill the suit, the ship used {value} oxygen.",
         },
     }
 
@@ -233,6 +247,9 @@ class MarsGravityUI(tk.Frame):
         self.rover_y = 440
 
         self.continue_button = None
+        self.suit_o2 = 100.0
+        self.suit_refills = 0
+        self.notice = None          # (texto, até quando) aviso do COSMO
         self.reset_player()
         self.build_ui()
         self.bind_controls()
@@ -418,6 +435,9 @@ class MarsGravityUI(tk.Frame):
 
     def reset_mission(self):
         self.reset_player()
+        self.suit_o2 = 100.0
+        self.suit_refills = 0
+        self.notice = None
 
         self.keys_pressed.clear()
         self.button_direction = 0
@@ -630,6 +650,7 @@ class MarsGravityUI(tk.Frame):
         self.grounded = True
 
         self.status_key = "status_fall"
+        self.use_suit_o2(self.SUIT_O2_PER_FALL)
 
     def finish(self):
         if self.completed:
@@ -713,6 +734,32 @@ class MarsGravityUI(tk.Frame):
                 text=self.tr("all_hints"),
             )
 
+
+    # ==================================================
+    # OXIGÊNIO DO TRAJE (consequência na nave)
+    # ==================================================
+
+    def use_suit_o2(self, amount):
+        was_low = self.suit_o2 < self.SUIT_LOW
+        self.suit_o2 -= amount
+        if self.suit_o2 <= 0:
+            # Não termina o jogo: o COSMO troca o cilindro
+            self.suit_o2 = 100.0
+            self.suit_refills += 1
+            self.notice = (self.tr("suit_refill"), time.monotonic() + 4)
+        elif self.suit_o2 < self.SUIT_LOW and not was_low:
+            self.notice = (self.tr("suit_low"), time.monotonic() + 3)
+
+    def oxygen_cost(self):
+        """Oxigênio da nave gasto para recarregar o traje."""
+        cost = 1 + self.suit_refills
+        if self.suit_o2 < 50:
+            cost += 1
+        return cost
+
+    def mission_effects(self):
+        """O que este minigame muda nos recursos da nave."""
+        return {"oxygen": -self.oxygen_cost()}
 
     # Botão "Continuar" dentro da mensagem de vitória
     def _show_continue(self):
@@ -857,8 +904,13 @@ class MarsGravityUI(tk.Frame):
         # COSMO BRIEFING
         # ------------------------------------------
 
+        notice = self.notice if self.notice and time.monotonic() < self.notice[1] else None
         if self.completed:
-            briefing, color = self.tr("cosmo_success"), self.GREEN
+            briefing = (self.tr("cosmo_success") + " "
+                        + self.tr("o2_cost", value=self.oxygen_cost()))
+            color = self.GREEN
+        elif notice:
+            briefing, color = notice[0], self.GOLD
         elif self.status_key == "status_fall":
             briefing, color = self.tr("cosmo_fall"), self.GOLD
         elif not self.grounded:
@@ -872,6 +924,29 @@ class MarsGravityUI(tk.Frame):
 
         # O que se move fica acima do fundo e atrás do painel e do COSMO
         canvas.tag_raise("dyn", self.layer_marker)
+
+        # ------------------------------------------
+        # SUIT OXYGEN
+        # ------------------------------------------
+
+        gx0, gy0, gx1, gy1 = 470, 18, 668, 66
+        low = self.suit_o2 < self.SUIT_LOW
+        bar_color = self.RED if low else self.CYAN
+        rounded_rect(canvas, gx0, gy0, gx1, gy1, r=12, fill=self.PANEL,
+                     outline=bar_color, width=2, tags="dyn")
+        item("text", gx0 + 12, gy0 + 15, anchor="w", text="🫁",
+             font=("Segoe UI Emoji", 13), fill=bar_color)
+        item("text", gx0 + 36, gy0 + 15, anchor="w",
+             text=self.tr("suit_o2"), font=("Arial", 9, "bold"),
+             fill=self.TEXT)
+        item("text", gx1 - 12, gy0 + 15, anchor="e",
+             text=f"{max(0, self.suit_o2):.0f}%", font=("Arial", 10, "bold"),
+             fill=bar_color)
+        item("rectangle", gx0 + 12, gy0 + 30, gx1 - 12, gy0 + 38,
+             fill="#24324F", outline="")
+        item("rectangle", gx0 + 12, gy0 + 30,
+             gx0 + 12 + (gx1 - gx0 - 24) * max(0, self.suit_o2) / 100,
+             gy0 + 38, fill=bar_color, outline="")
 
         # ------------------------------------------
         # SUCCESS OVERLAY
@@ -953,6 +1028,9 @@ class MarsGravityUI(tk.Frame):
 
         for _ in range(steps):
             self.physics_step(step_dt)
+
+        if not self.completed:
+            self.use_suit_o2(self.SUIT_O2_PER_SECOND * dt)
 
         self.refresh()
 

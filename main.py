@@ -284,7 +284,9 @@ class App(tk.Tk):
                 puzzle_id,
                 {
                     "completed": True,
-                    "status": "stable_orbit"
+                    "status": "stable_orbit",
+                    # energia gasta nas queimas de correção
+                    "effects": screen.mission_effects()
                 }
             ),
             on_back=lambda: self.return_from_puzzle(engine)
@@ -307,7 +309,9 @@ class App(tk.Tk):
                 puzzle_id,
                 {
                     "completed": True,
-                    "status": "rover_reached"
+                    "status": "rover_reached",
+                    # oxigênio da nave gasto para recarregar o traje
+                    "effects": screen.mission_effects()
                 }
             ),
             on_back=lambda: self.return_from_puzzle(engine)

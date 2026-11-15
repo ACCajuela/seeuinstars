@@ -133,6 +133,66 @@ check("sorteio de tempestade com chance 0 nunca acontece",
 check("sorteio de tempestade com chance 1 sempre acontece",
       pick_storm([{"class": "X"}], chance=1.0) == {"class": "X"})
 
+
+# ------------------------------------------------------------
+# Noite em Marte: poeira e frio
+# ------------------------------------------------------------
+night = {"dust": True, "cold": True}
+
+m = MissionState()
+m.location = "mars"
+m.resolve_day([], conditions=night)
+check("poeira: painéis sujos não geram energia; frio: bateria perde 3",
+      m.energy == 6 + 0 - 3)
+
+m = MissionState()
+m.location = "mars"
+m.resolve_day(["heat_battery"], conditions=night)
+check("aquecedor: gasta 2 e a bateria não perde nada", m.energy == 6 - 2)
+
+m = MissionState()
+m.location = "mars"
+r = m.resolve_day(["clean_panels", "heat_battery"], conditions=night)
+check("limpar os painéis: volta a energia solar de Marte (+2)", m.energy == 6 + 2 - 2)
+check("limpar os painéis gasta 1 de oxigênio do traje (+1 respirado)", m.oxygen == 6 - 1 - 1)
+check("relatório não fala de poeira quando os painéis foram limpos",
+      not any(i["key"] == "dust_no_power" for i in r))
+
+m = MissionState()
+m.energy = 1
+m.location = "mars"
+m.resolve_day([], conditions=night)
+check("o frio não deixa a energia negativa", m.energy == 0)
+
+
+# ------------------------------------------------------------
+# Consequências dos minigames
+# ------------------------------------------------------------
+import tkinter as tk
+from puzzles.orbital_launch_ui import OrbitalLaunchUI
+from puzzles.mars_gravity_ui import MarsGravityUI
+
+root = tk.Tk()
+o = OrbitalLaunchUI(root, language="pt_BR")
+check("lançamento de primeira não gasta energia", o.mission_effects() == {"energy": 0})
+o.contextual_feedback("collision")
+o.contextual_feedback("escape")
+check("2 lançamentos errados gastam 2 de energia", o.mission_effects() == {"energy": -2})
+for _ in range(5):
+    o.contextual_feedback("collision")
+check("o gasto de energia do lançamento tem limite (3)", o.mission_effects() == {"energy": -3})
+o.destroy()
+
+g = MarsGravityUI(root, language="pt_BR")
+check("traje cheio: a nave gasta 1 de oxigênio para recarregar", g.mission_effects() == {"oxygen": -1})
+g.use_suit_o2(60)
+check("traje abaixo de 50%: gasta 2", g.mission_effects() == {"oxygen": -2})
+g.use_suit_o2(50)
+check("traje esvaziou: troca o cilindro e volta a 100%", g.suit_o2 == 100 and g.suit_refills == 1)
+check("cada troca de cilindro custa +1 de oxigênio da nave", g.mission_effects() == {"oxygen": -2})
+g.destroy()
+root.destroy()
+
 # ------------------------------------------------------------
 # Ligação com a história e o save
 # ------------------------------------------------------------
