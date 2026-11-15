@@ -16,7 +16,9 @@
     "sound_off": "Som: Desligado",
     "audio": "Áudio",
     "language": "Idioma",
-    "back": "Voltar"
+    "back": "Voltar",
+    "game_subtitle": "UMA JORNADA ALÉM DA TERRA",
+    "skip_intro": "PULAR INTRO >>"
   },
   "intro_subtitles": {
     "sagan_001": "Deste ponto de observação distante, a Terra talvez",

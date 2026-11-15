@@ -16,7 +16,9 @@
     "sound_off": "Sound: OFF",
     "audio": "Audio",
     "language": "Language",
-    "back": "Back"
+    "back": "Back",
+    "game_subtitle": "A JOURNEY BEYOND EARTH",
+    "skip_intro": "SKIP INTRO >>"
   },
   "intro_subtitles": {
     "sagan_001": "From this distant vantage point, the Earth might",
