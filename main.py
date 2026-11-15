@@ -19,6 +19,7 @@ from core.ui import (
 
 from screens.intro_screen import IntroScreen
 from screens.mission_log import MissionLogScreen
+from screens.mission_report import MissionReportScreen
 from screens.story_dialogue import StoryDialogueScreen
 
 from puzzles.quiz_screen import QuizScreen
@@ -236,6 +237,10 @@ class App(tk.Tk):
             )
             return
 
+        if puzzle_type == "mission_report":
+            self.open_mission_report(engine)
+            return
+
         if puzzle_type == "mission_leg":
             self.open_mission_log(
                 engine,
@@ -340,6 +345,24 @@ class App(tk.Tk):
         )
 
         self._switch(screen)
+
+    # ========================================================
+    # RELATÓRIO DA MISSÃO (final)
+    # ========================================================
+
+    def open_mission_report(self, engine):
+        print("[GAME] Opening mission report.")
+
+        self._switch(
+            MissionReportScreen(
+                self,
+                engine,
+                self.t,
+                language=self.current_language(),
+                on_menu=self.show_home,
+                on_replay=self.new_game
+            )
+        )
 
     # ========================================================
     # RETURN FROM PUZZLE

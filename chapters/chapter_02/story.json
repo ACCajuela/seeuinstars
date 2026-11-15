@@ -394,8 +394,13 @@
         {
           "speaker": "Narrator",
           "text_key": "chapter_02.narrator_06"
+        },
+        {
+          "speaker": "COSMO",
+          "text_key": "chapter_02.cosmo_40"
         }
-      ]
+      ],
+      "puzzle": "mission_report"
     }
   }
 }

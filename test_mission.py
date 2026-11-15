@@ -193,6 +193,29 @@ check("cada troca de cilindro custa +1 de oxigênio da nave", g.mission_effects(
 g.destroy()
 root.destroy()
 
+
+# ------------------------------------------------------------
+# Relatório da missão (final)
+# ------------------------------------------------------------
+from screens.mission_report import build_report
+
+m = MissionState()
+m.start_leg("travel_earth_mars", 3, "earth")
+m.resolve_day(["build_shelter"], storm={"class": "M6.1", "date": "2024-02-21"})
+m.resolve_day(["build_shelter"], storm={"class": "X5.8", "date": "2024-05-11"})
+m.resolve_day([], storm={"class": "M2.0", "date": "2024-03-01"})
+m.record_minigame("orbital_launch", {"energy": 0})
+rep = build_report(m)
+keys = [h[1] for h in rep["highlights"]]
+check("relatório: abrigo que bloqueou tudo", keys[0] == "hl_storm_blocked")
+check("relatório: abrigo que segurou só parte", keys[1] == "hl_storm_partial")
+check("relatório: tempestade sem abrigo", keys[2] == "hl_storm_hit")
+check("relatório: lançamento de primeira", "hl_launch_perfect" in keys)
+check("relatório: lista as tempestades reais enfrentadas", len(rep["storms"]) == 3)
+check("relatório: radiação 2 ganha o Escudo Solar", rep["medals"]["solar_shield"] == (m.dose <= 2))
+check("relatório: início e fim da nave", rep["start"]["energy"] == 6 and rep["end"]["energy"] == m.energy)
+check("relatório: no máximo 5 destaques", len(build_report(m)["highlights"]) <= 5)
+
 # ------------------------------------------------------------
 # Ligação com a história e o save
 # ------------------------------------------------------------
