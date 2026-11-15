@@ -1,7 +1,7 @@
-
 {
   "chapter": 2,
   "title_key": "chapter_02.title",
+  "background": "fundo-nave.png",
   "start_scene": "mars_approach",
   "scenes": {
     "mars_approach": {
@@ -148,6 +148,7 @@
       "next_scene": "rover_interception"
     },
     "rover_interception": {
+      "background": "fundo-home.png",
       "dialogues": [
         {
           "speaker": "Narrator",
@@ -285,6 +286,7 @@
       "next_scene": "leaving_mars"
     },
     "leaving_mars": {
+      "background": "fundo-home.png",
       "dialogues": [
         {
           "speaker": "Narrator",

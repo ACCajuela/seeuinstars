@@ -637,10 +637,14 @@ class DialogueScreen(tk.Frame):
 
         c.pack(fill="both", expand=True)
 
-        self.background_img = draw_background(
-            c,
-            DIALOGUE_BACKGROUND
+        # Fundo: muda conforme a cena (campo "background" no story.json,
+        # na cena ou no capítulo). Sem o campo, usa DIALOGUE_BACKGROUND.
+        self.background_img = None
+        self.background_path = None
+        self.background_item = c.create_image(
+            WIDTH // 2, HEIGHT // 2
         )
+        self._update_background()
 
         # Caixa de diálogo
         x0, y0, x1, y1 = DIALOGUE_BOX
@@ -729,6 +733,9 @@ class DialogueScreen(tk.Frame):
 
         data = self.engine.next_dialogue()
 
+        # A cena pode ter mudado: troca o fundo se precisar
+        self._update_background()
+
         if data is None:
             self._show_end()
             return
@@ -755,6 +762,37 @@ class DialogueScreen(tk.Frame):
             data["speaker"],
             self.t(data["text_key"]),
             after_typing
+        )
+
+    def _background_for_scene(self):
+        """Fundo da cena atual: "background" da cena, senão do capítulo,
+        senão o fundo padrão do diálogo."""
+        scene = self.engine.scene or {}
+        name = (
+            scene.get("background")
+            or self.engine.story.get("background")
+        )
+        return IMAGES_DIR / name if name else DIALOGUE_BACKGROUND
+
+    def _update_background(self):
+        path = self._background_for_scene()
+
+        if path == self.background_path:
+            return
+
+        self.background_path = path
+        self.background_img = None
+
+        if path.exists():
+            img = tk.PhotoImage(file=str(path))
+            factor = max(1, img.width() // WIDTH, img.height() // HEIGHT)
+            if factor > 1:
+                img = img.subsample(factor)
+            self.background_img = img  # manter referência
+
+        self.canvas.itemconfigure(
+            self.background_item,
+            image=self.background_img or ""
         )
 
     def _present(self, speaker, text, after_typing=None):
